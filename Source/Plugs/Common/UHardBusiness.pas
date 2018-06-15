@@ -35,15 +35,15 @@ function GetLadingOrders(const nCard,nPost: string; var nData: TLadingBillItems)
 procedure WhenTTCE_M100_ReadCard(const nItem: PM100ReaderItem);
 
 //推送消息到微信平台
-procedure SendMsgToWebMall(const nLid,nFactoryId:string;const nBillType:string);
+procedure SendMsgToWebMall(nLid:string;const nFactoryId,nBillType:string;const nMsgType:Integer);
 //发送消息
 function Do_send_event_msg(const nXmlStr: string): string;
 //修改网上订单状态
-function ModifyWebOrderStatus(const nLId,nBillType:string):string;
+function ModifyWebOrderStatus(const nLId,nBillType:string;nMstType:Integer):string;
 //修改网上订单状态
 function Do_ModifyWebOrderStatus(const nXmlStr: string): string;
 
-procedure PustMsgToWeb(nList,nFactId,nBillType:string);
+procedure PustMsgToWeb(nList,nFactId,nBillType:string;nMsgType:Integer);
 
 implementation
 
@@ -770,7 +770,7 @@ begin
   //打印报表
 
   //发送微信商城
-  PustMsgToWeb(nTrucks[0].FID, gSysParam.FFactory, nCardType);
+  PustMsgToWeb(nTrucks[0].FID, gSysParam.FFactory, nCardType, sFlag_WebOrderStatus_OT);
 
   Result := True;
 end;
@@ -1540,50 +1540,125 @@ begin
   end;
 end;
 
-procedure SendMsgToWebMall(const nLid,nFactoryId:string;const nBillType:string);
+procedure SendMsgToWebMall(nLid:string;const nFactoryId,nBillType:string;const nMsgType:Integer);
 var nBills: TLadingBillItems;
-    nXmlStr,nData:string;
+    nXmlStr,nData, nStr:string;
     nIdx:Integer;
-    nNetWeight:Double;
-    MsgType: integer;
+    nNetWeight, nNet:Double;
+    nDBConn: PDBWorker;
 begin
   {$IFNDEF EnableWebMall}
   Exit;
   {$ENDIF}
-  
+  nDBConn := nil;
   nNetWeight := 0;
-  if nBillType=sFlag_Sale then
-  begin
-    //加载提货单信息
-    if not GetLadingBills(nLid, sFlag_BillDone, nBills) then
+  with gParamManager.ActiveParam^ do
+  try
+    nDBConn := gDBConnManager.GetConnection(FDB.FID, nIdx);
+    if not Assigned(nDBConn) then  Exit;
+    if not nDBConn.FConn.Connected then
+      nDBConn.FConn.Connected := True;
+
+    if nBillType=sFlag_Sale then
     begin
-      Exit;
+      //加载提货单信息
+      if nMsgType = sFlag_MsgType_DL then
+      begin
+        nStr := 'select * from %s where L_Id=''%s''';
+        nStr := Format(nStr,[sTable_BillBak,nLid]);
+        with gDBConnManager.WorkerQuery(nDBConn, nStr) do
+        begin
+          if RecordCount < 1 then  Exit;
+          SetLength(nBills,RecordCount);
+
+          nIdx := 0;
+          First;
+          while not Eof do
+          begin
+            with nBills[nIdx] do
+            begin
+              FID         := FieldByName('L_ID').AsString;
+              FZhiKa      := FieldByName('L_ZhiKa').AsString;
+              FCusID      := FieldByName('L_CusID').AsString;
+              FCusName    := FieldByName('L_CusName').AsString;
+              FTruck      := FieldByName('L_Truck').AsString;
+
+              FType       := FieldByName('L_Type').AsString;
+              FStockNo    := FieldByName('L_StockNo').AsString;
+              FStockName  := FieldByName('L_StockName').AsString;
+              FValue      := FieldByName('L_Value').AsFloat;
+              FCard       := FieldByName('L_Card').AsString;
+              Inc(nIdx);
+              Next;
+            end;
+          end;
+        end;
+      end
+      else
+      if not GetLadingBills(nLid, sFlag_BillDone, nBills) then exit;
+    end
+    else if nBillType=sFlag_Provide then
+    begin
+      //加载采购订单信息
+      if nMsgType = sFlag_MsgType_OT then //
+      begin
+        nStr := 'select D_OID,d_mvalue-d_pvalue-isnull(d_kzvalue,0) as netValue from %s where D_Id=''%s''';
+        nStr := Format(nStr,[sTable_OrderDtl,nLid]);
+        with gDBConnManager.WorkerQuery(nDBConn, nStr) do
+        begin
+          if RecordCount < 1 then Exit;
+          nLid := FieldByName('D_OID').AsString;
+          nNet := FieldByName('netValue').AsFloat;
+
+          if not GetLadingOrders(nLid, sFlag_BillDone, nBills) then Exit;
+        end;
+      end
+      else
+      if nMsgType = sFlag_MsgType_DL then
+      begin
+        nStr := 'select * from %s where o_id=''%s''';
+        nStr := Format(nStr,[sTable_OrderBak,nLid]);
+        with gDBConnManager.WorkerQuery(nDBConn, nStr) do
+        begin
+          if RecordCount < 1 then exit;
+          SetLength(nBills,RecordCount);
+
+          nIdx := 0;
+          First;
+          while not Eof do
+          begin
+            with nBills[nIdx] do
+            begin
+              FCusID      := FieldByName('O_ProId').AsString;
+              FCusName    := FieldByName('O_ProName').AsString;
+              FID         := FieldByName('O_ID').AsString;
+              FCard       := FieldByName('O_Card').AsString;
+              FTruck      := FieldByName('O_Truck').AsString;
+              FStockNo    := FieldByName('O_StockNo').AsString;
+              FStockName  := FieldByName('O_StockName').AsString;
+              FValue  := FieldByName('O_Value').AsFloat;
+
+              Inc(nIdx);
+              Next;
+            end;
+          end;
+        end;
+      end
+      else
+      if not GetLadingOrders(nLid, sFlag_BillDone, nBills) then Exit;
     end;
-  end
-  else if nBillType=sFlag_Provide then
-  begin
-    //加载采购订单信息
-    if not GetLadingOrders(nLid, sFlag_BillDone, nBills) then
-    begin
-      Exit;
-    end;  
-  end
-  else begin
-    Exit;
+  finally
+    gDBConnManager.ReleaseConnection(nDBConn);
   end;
+
   for nIdx := Low(nBills) to High(nBills) do
   with nBills[nIdx] do
   begin
-
-    if FStatus = 'N' then
-      MsgType := 1
+    if (nBillType = sFlag_Provide) and (nMsgType = sFlag_MsgType_OT) then
+      nNetWeight := nNet
     else
-    if FStatus = 'O' then
-      MsgType := 2
-    else
-      Exit;
-
-    nNetWeight := FValue;
+      nNetWeight := FValue;
+      
     nXmlStr := '<?xml version="1.0" encoding="UTF-8"?>'
         +'<DATA>'
         +'<head>'
@@ -1612,7 +1687,7 @@ begin
         +'	  </Item>	'
         +'</Items>'
         +'</DATA>';
-    nXmlStr := Format(nXmlStr,[nFactoryId, FCusID, MsgType,//cSendWeChatMsgType_DelBill,
+    nXmlStr := Format(nXmlStr,[nFactoryId, FCusID, nMsgType,//cSendWeChatMsgType_DelBill,
                FID, FCard, FTruck, FStockNo, FStockName, FCusID, FCusName,nNetWeight]);
     gSysLoger.AddLog('SendMsgToWebMall::'+nxmlstr);
     
@@ -1636,14 +1711,13 @@ begin
 end;
 
 //修改网上订单状态
-function ModifyWebOrderStatus(const nLId,nBillType:string):string;
+function ModifyWebOrderStatus(const nLId,nBillType:string;nMstType:Integer):string;
 var
   nXmlStr,nData,nSql:string;
   nDBConn: PDBWorker;
   nWebOrderId:string;
   nIdx:Integer;
   FNetWeight:Double;
-  nMstType: Integer;
 begin
   {$IFNDEF EnableWebMall}
   Exit;
@@ -1652,23 +1726,38 @@ begin
   FNetWeight := 0;
   nWebOrderId := '';
   nDBConn := nil;
-  if nWebOrderId='' then
+
+  with gParamManager.ActiveParam^ do
   begin
-    with gParamManager.ActiveParam^ do
-    begin
-      try
-        nDBConn := gDBConnManager.GetConnection(FDB.FID, nIdx);
-        if not Assigned(nDBConn) then
-        begin
-          Exit;
-        end;
-        if not nDBConn.FConn.Connected then
+    try
+      nDBConn := gDBConnManager.GetConnection(FDB.FID, nIdx);
+      if not Assigned(nDBConn) then
+      begin
+        Exit;
+      end;
+      if not nDBConn.FConn.Connected then
         nDBConn.FConn.Connected := True;
 
-        //查询网上商城订单
+      //查询网上商城订单
+      if (nBillType = sFlag_Provide) and (nMstType = sFlag_WebOrderStatus_OT) then
+      begin   //查询供应的，且出厂的，查询是否是网络订单
+        nSql := 'select w.WOM_WebOrderID,D_Value from %s od,%s o,S_WebOrderMatch w where '+
+                'od.d_oid=o.o_id and wom_Lid=o.O_ID and d_id=''%s'' and d_status=''%s''';
+        nSql := Format(nSql,[sTable_OrderDtl,sTable_Order,nLId,sFlag_TruckOut]);
+
+        with gDBConnManager.WorkerQuery(nDBConn, nSql) do
+        begin
+          if recordcount>0 then
+          begin
+            nWebOrderId := FieldByName('WOM_WebOrderID').asstring;
+            FNetWeight := FieldByName('D_Value').asFloat;
+          end;
+        end;
+      end
+      else
+      begin
         nSql := 'select WOM_WebOrderID from %s where WOM_LID=''%s''';
         nSql := Format(nSql,[sTable_WebOrderMatch,nLId]);
-
         with gDBConnManager.WorkerQuery(nDBConn, nSql) do
         begin
           if recordcount>0 then
@@ -1676,61 +1765,35 @@ begin
             nWebOrderId := FieldByName('WOM_WebOrderID').asstring;
           end;
         end;
-
-        if nWebOrderId='' then Exit;
-
-        if nBillType = sFlag_Sale then
-        begin
-          //销售净重
-          nSql := 'select L_Value,L_Status from %s where l_id=''%s''';
-          nSql := Format(nSql,[sTable_Bill,nLId]);
-          with gDBConnManager.WorkerQuery(nDBConn, nSql) do
-          begin
-            if recordcount>0 then
-            begin
-              FNetWeight := FieldByName('L_Value').asFloat;
-              //nEmptyOut := FieldByName('L_EmptyOut').AsString;
-              if FieldByName('L_Status').AsString = 'N' then
-                nMstType := 0
-              else
-              if FieldByName('L_Status').AsString = 'O' then
-                nMstType := 1
-              else Exit;
-            end;          
-          end;
-        end;
-
-        //采购净重
-        if nBillType = sFlag_Provide then
-        begin
-          nSql := 'select sum(d_mvalue) d_mvalue,sum(d_pvalue) d_pvalue from %s where d_oid=''%s'' and d_status=''%s''';
-          nSql := Format(nSql,[sTable_OrderDtl,nLId,sFlag_TruckOut]);
-          with gDBConnManager.WorkerQuery(nDBConn, nSql) do
-          begin
-            if recordcount>0 then
-            begin
-              FNetWeight := FieldByName('d_mvalue').asFloat-FieldByName('d_pvalue').asFloat;
-              nMstType := 1
-            end
-            else
-            begin
-              nSql := 'select * from %s where O_ID=''%s''';
-              nSql := Format(nSql,[sTable_Order,nLId]);
-              with gDBConnManager.WorkerQuery(nDBConn, nSql) do
-              begin
-                if recordcount>0 then
-                begin
-                  FNetWeight := FieldByName('O_Value').asFloat;
-                  nMstType := 0
-                end
-                else Exit;
-              end;
-            end;
-          end;
-        end;
-      finally
-        gDBConnManager.ReleaseConnection(nDBConn);
       end;
+
+      if trim(nWebOrderId) = '' then Exit;
+
+      if nBillType = sFlag_Sale then
+      begin
+        //销售净重
+        nSql := 'Select L_Value From %s Where L_Id=''%s''';
+        nSql := Format(nSql,[sTable_Bill,nLId]);
+        with gDBConnManager.WorkerQuery(nDBConn, nSql) do
+        begin
+          if recordcount>0 then
+            FNetWeight := FieldByName('L_Value').asFloat;
+        end;
+      end;
+
+      //采购净重
+      if (nBillType = sFlag_Provide) and (nMstType <> sFlag_WebOrderStatus_OT) then
+      begin
+        nSql := 'Select O_Value From %s Where O_ID=''%s''';
+        nSql := Format(nSql,[sTable_Order,nLId]);
+        with gDBConnManager.WorkerQuery(nDBConn, nSql) do
+        begin
+          if RecordCount > 0 then
+            FNetWeight := FieldByName('O_Value').AsFloat;
+        end;
+      end;
+    finally
+      gDBConnManager.ReleaseConnection(nDBConn);
     end;
   end;
   
@@ -1764,12 +1827,12 @@ begin
     Result := nOut.FData;
 end;
 
-procedure PustMsgToWeb(nList,nFactId,nBillType:string);
+procedure PustMsgToWeb(nList,nFactId,nBillType:string;nMsgType:Integer);
 var
   nWebOrderId:string;
 begin
   try
-    nWebOrderId := ModifyWebOrderStatus(nList,nBillType);
+    nWebOrderId := ModifyWebOrderStatus(nList,nBillType,nMsgType);
   except
     on E: Exception do
     begin
@@ -1778,8 +1841,13 @@ begin
     end;
   end;
   try
+    case nMsgType of
+      sFlag_WebOrderStatus_ZK: nMsgType := sFlag_MsgType_ZK;
+      sFlag_WebOrderStatus_OT: nMsgType := sFlag_MsgType_OT;
+      sFlag_WebOrderStatus_DL: nMsgType := sFlag_MsgType_DL;
+    end;
     if nWebOrderId <> '' then
-      SendMsgToWebMall(nList,nFactId,nBillType);
+      SendMsgToWebMall(nList,nFactId,nBillType,nMsgType);
   except
     on E: Exception do
     begin

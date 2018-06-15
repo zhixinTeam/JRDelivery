@@ -627,7 +627,7 @@ begin
       gDBConnManager.WorkerExec(FDBConn, nStr);
       //更新磅单基本信息
 
-      if FListA.Values['WebOrderID'] <> '' then
+      if trim(FListA.Values['WebOrderID']) <> '' then
       begin
         nStr := 'insert into %s(WOM_WebOrderID,WOM_LID) values(''%s'',''%s'')';
         nStr := Format(nStr,[sTable_WebOrderMatch,FListA.Values['WebOrderID'],nOut.FData]);
@@ -860,7 +860,7 @@ begin
   {$ENDIF}
   //nWebOrderID := FListA.Values['WebOrderID'];
 
-  PustMsgToWeb(nOut.FData,gSysParam.FFactory,sFlag_Sale);
+  PustMsgToWeb(nOut.FData,gSysParam.FFactory,sFlag_Sale,sFlag_WebOrderStatus_ZK);
 //  nWebOrderID := FListA.Values['WebOrderID'];
 //  try
 //    gWechatMsgManager.SendMsg(nOut.FData,gSysParam.FFactory,cSendWeChatMsgType_AddBill,sFlag_Sale,c_WeChatStatusCreateCard,nWebOrderID);
@@ -1376,6 +1376,7 @@ begin
     FDBConn.FConn.RollbackTrans;
     raise;
   end;
+  PustMsgToWeb(FIn.FData,gSysParam.FFactory,sFlag_Sale,sFlag_WebOrderStatus_DL);
 end;
 
 //Date: 2014-09-17
@@ -2669,7 +2670,10 @@ begin
     for nIdx:=Low(nBills) to High(nBills) do
     with nBills[nIdx] do
     begin
-      PustMsgToWeb(FID,gSysParam.FFactory,sFlag_Sale);
+      if FYSValid = sFlag_Yes then
+        PustMsgToWeb(FID,gSysParam.FFactory,sFlag_Sale,sFlag_WebOrderStatus_DL)  //空车出厂推送删除消息
+      else
+        PustMsgToWeb(FID,gSysParam.FFactory,sFlag_Sale,sFlag_WebOrderStatus_OT);
     end;
   end;
 

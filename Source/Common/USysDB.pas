@@ -257,6 +257,14 @@ const
   sFlag_TransferPound = 'TransferPound';             //短倒是否过磅
   sFlag_Transfer      = 'Bus_Transfer';              //短倒单号
 
+  sFlag_WebOrderStatus_ZK    =0;                     //制卡
+  sFlag_WebOrderStatus_OT    =1;                     //出厂
+  sFlag_WebOrderStatus_DL    =2;                     //删除
+
+  sFlag_MsgType_ZK           =1;                     //开卡
+  sFlag_MsgType_OT           =2;                     //出厂
+  sFlag_MsgType_DL           =4;                     //删除
+
   {*数据表*}
   sTable_Group        = 'Sys_Group';                 //用户组
   sTable_User         = 'Sys_User';                  //用户表

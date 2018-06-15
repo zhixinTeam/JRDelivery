@@ -381,7 +381,7 @@ begin
       gDBConnManager.WorkerExec(FDBConn, nStr);
     end;
 
-    if FListA.Values['WebOrderID'] <> '' then
+    if Trim(FListA.Values['WebOrderID']) <> '' then
     begin
       nStr := 'insert into %s(WOM_WebOrderID,WOM_LID) values(''%s'',''%s'')';
       nStr := Format(nStr,[sTable_WebOrderMatch,FListA.Values['WebOrderID'],nOut.FData]);
@@ -399,7 +399,7 @@ begin
     FDBConn.FConn.RollbackTrans;
     raise;
   end;
-  PustMsgToWeb(nOut.FData,gSysParam.FFactory,sFlag_Provide);
+  PustMsgToWeb(nOut.FData,gSysParam.FFactory,sFlag_Provide,sFlag_WebOrderStatus_ZK);
 //  try
 //    gWechatMsgManager.SendMsg(nOut.FData,gSysParam.FFactory,cSendWeChatMsgType_AddBill,sFlag_Provide,c_WeChatStatusCreateCard,nWeborder);
 //  except
@@ -464,6 +464,7 @@ begin
     FDBConn.FConn.RollbackTrans;
     raise;
   end;
+  PustMsgToWeb(FIn.FData,gSysParam.FFactory,sFlag_Provide,sFlag_WebOrderStatus_DL);
 end;
 
 //Date: 2014-09-17
@@ -1092,10 +1093,7 @@ begin
   //微信下单的推送出厂通知，并修改商城订单状态
   if (FIn.FExtParam = sFlag_TruckOut) and (Result = True) then
   begin
-    with nPound[0] do
-    begin
-      PustMsgToWeb(FID,gSysParam.FFactory,sFlag_Provide);
-    end;
+    PustMsgToWeb(nPound[0].FID,gSysParam.FFactory,sFlag_Provide,sFlag_WebOrderStatus_OT);
   end;
 
   if FIn.FExtParam = sFlag_TruckBFM then //称量毛重
