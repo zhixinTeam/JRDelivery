@@ -10,8 +10,8 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   UFormNormal, cxGraphics, cxControls, cxLookAndFeels,
   cxLookAndFeelPainters, ComCtrls, cxContainer, cxEdit, cxTextEdit,
-  cxListView, cxMCListBox, dxLayoutControl, StdCtrls,
-  dxLayoutcxEditAdapters;
+  cxListView, cxMCListBox, dxLayoutControl, StdCtrls, dxSkinsCore,
+  dxSkinsDefaultPainters, dxLayoutcxEditAdapters;
 
 type
   TfFormTruckEmpty = class(TfFormNormal)
@@ -91,10 +91,7 @@ begin
 
   nHint := '';
   for nIdx:=Low(gBills) to High(gBills) do
-//  if gBills[nIdx].FStatus = sFlag_TruckNone then
-  if (gBills[nIdx].FStatus <> sFlag_TruckBFP) and
-    (gBills[nIdx].FStatus <> sFlag_TruckZT) and
-    (gBills[nIdx].FStatus <> sFlag_TruckFH) then
+  if gBills[nIdx].FStatus = sFlag_TruckNone then
   begin
     nStr := '※.单号:[ %s ] 状态:[ %-6s -> %-6s ]   ';
     if nIdx < High(gBills) then nStr := nStr + #13#10;
@@ -222,6 +219,11 @@ begin
 
   if nRet then
   begin
+    try
+      SaveWebOrderDelMsg(gBills[0].FID,sFlag_Sale);
+    except
+    end;
+  //插入删除推送
     ShowMsg('允许车辆空车出厂成功', sHint);
     ModalResult := mrOk;
   end;

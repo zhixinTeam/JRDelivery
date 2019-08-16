@@ -1,6 +1,6 @@
 object fFormMain: TfFormMain
-  Left = 283
-  Top = 19
+  Left = 362
+  Top = 46
   BorderStyle = bsNone
   Caption = #29992#25143#33258#21161#26597#35810#31995#32479
   ClientHeight = 659
@@ -60,7 +60,7 @@ object fFormMain: TfFormMain
   end
   object LabelHint: TcxLabel
     Left = 0
-    Top = 665
+    Top = 570
     Align = alClient
     AutoSize = False
     Caption = #35831#24744#21047#21345
@@ -78,7 +78,7 @@ object fFormMain: TfFormMain
     Height = 89
     Width = 931
     AnchorX = 466
-    AnchorY = 710
+    AnchorY = 615
   end
   object Panel1: TPanel
     Left = 0
@@ -186,26 +186,6 @@ object fFormMain: TfFormMain
     Height = 95
     Width = 931
     AnchorY = 238
-  end
-  object labelCusName: TcxLabel
-    Left = 0
-    Top = 570
-    Align = alTop
-    AutoSize = False
-    Caption = #23458#25143#22995#21517#65306
-    ParentFont = False
-    Style.Font.Charset = DEFAULT_CHARSET
-    Style.Font.Color = clWhite
-    Style.Font.Height = -64
-    Style.Font.Name = #23435#20307
-    Style.Font.Style = [fsBold]
-    Style.IsFontAssigned = True
-    Properties.Alignment.Horz = taLeftJustify
-    Properties.Alignment.Vert = taVCenter
-    Transparent = True
-    Height = 95
-    Width = 931
-    AnchorY = 618
   end
   object ComPort1: TComPort
     BaudRate = br9600

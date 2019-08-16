@@ -4,6 +4,7 @@
 *******************************************************************************}
 unit UFramePurchaseOrder;
 
+{$I Link.inc}
 interface
 
 uses
@@ -14,7 +15,7 @@ uses
   cxTextEdit, cxMaskEdit, cxButtonEdit, ADODB, cxLabel, UBitmapPanel,
   cxSplitter, cxGridLevel, cxClasses, cxGridCustomView,
   cxGridCustomTableView, cxGridTableView, cxGridDBTableView, cxGrid,
-  ComCtrls, ToolWin, cxCheckBox, dxLayoutcxEditAdapters;
+  ComCtrls, ToolWin, cxCheckBox;
 
 type
   TfFramePurchaseOrder = class(TfFrameNormal)
@@ -42,6 +43,8 @@ type
     Check1: TcxCheckBox;
     N4: TMenuItem;
     N5: TMenuItem;
+    N7: TMenuItem;
+    N8: TMenuItem;
     procedure EditDatePropertiesButtonClick(Sender: TObject;
       AButtonIndex: Integer);
     procedure EditIDPropertiesButtonClick(Sender: TObject;
@@ -55,6 +58,8 @@ type
     procedure N3Click(Sender: TObject);
     procedure Check1Click(Sender: TObject);
     procedure N5Click(Sender: TObject);
+    procedure N7Click(Sender: TObject);
+    procedure N8Click(Sender: TObject);
   private
     { Private declarations }
   protected
@@ -65,8 +70,6 @@ type
     procedure OnDestroyFrame; override;
     function InitFormDataSQL(const nWhere: string): string; override;
     {*查询SQL*}
-    procedure SendMsgToWebMall(const nOid: string);
-    procedure ModifyWebOrderStatus(const nOid: string);    
   public
     { Public declarations }
     class function FrameID: integer; override;
@@ -77,7 +80,7 @@ implementation
 {$R *.dfm}
 uses
   ULibFun, UMgrControl,UDataModule, UFrameBase, UFormBase, USysBusiness,
-  USysConst, USysDB, UFormDateFilter, UFormInputbox,UBusinessPacker, USysLoger;
+  USysConst, USysDB, UFormDateFilter, UFormInputbox;
 
 //------------------------------------------------------------------------------
 class function TfFramePurchaseOrder.FrameID: integer;
@@ -92,6 +95,13 @@ begin
   FTimeE := Str2DateTime(Date2Str(Now) + ' 00:00:00');
 
   InitDateRange(Name, FStart, FEnd);
+  {$IFDEF KuangFa}
+  N7.Visible := True;
+  N8.Visible := True;
+  {$ELSE}
+  N7.Visible := False;
+  N8.Visible := False;
+  {$ENDIF}
 end;
 
 procedure TfFramePurchaseOrder.OnDestroyFrame;
@@ -108,9 +118,16 @@ begin
   Result := 'Select oo.* From $OO oo ';
   //xxxxx
 
+  {$IFDEF AlwaysUseDate}
+  Result := Result + ' Where (O_Date >=''$ST'' and O_Date<''$End'') ' ;
+
+  if nWhere <> '' then
+    Result := Result + ' And (' + nWhere + ')';
+  {$ELSE}
   if nWhere = '' then
        Result := Result + ' Where (O_Date >=''$ST'' and O_Date<''$End'') '
   else Result := Result + ' Where (' + nWhere + ')';
+  {$ENDIF}
 
   if Check1.Checked then
        Result := MacroValue(Result, [MI('$OO', sTable_OrderBak)])
@@ -157,6 +174,7 @@ end;
 //Desc: 删除
 procedure TfFramePurchaseOrder.BtnDelClick(Sender: TObject);
 var nStr: string;
+    nP: TFormCommandParam;
 begin
   if cxView1.DataController.GetSelectedCount < 1 then
   begin
@@ -166,17 +184,25 @@ begin
   nStr := SQLQuery.FieldByName('O_ID').AsString;
   if not QueryDlg('确定要删除编号为[ ' + nStr + ' ]的订单吗?', sAsk) then Exit;
 
-  try
-    //推送公众号消息
-    SendMsgToWebMall(SQLQuery.FieldByName('O_ID').AsString);
-    nStr := 'update %s set WOM_deleted=''%s'' where WOM_LID=''%s''';
-    nStr := Format(nStr,[sTable_WebOrderMatch,sFlag_Yes,SQLQuery.FieldByName('O_ID').AsString]);
-    fdm.ExecuteSQL(nStr);
-    //修改商城订单状态
-    ModifyWebOrderStatus(SQLQuery.FieldByName('O_ID').AsString);
-  except
-    //不处理异常
+  {$IFDEF ForceMemo}
+  with nP do
+  begin
+    nStr := SQLQuery.FieldByName('O_ID').AsString;
+    nStr := Format('请填写删除[ %s ]单据的原因', [nStr]);
+
+    FCommand := cCmd_EditData;
+    FParamA := nStr;
+    FParamB := 320;
+    FParamD := 2;
+
+    nStr := SQLQuery.FieldByName('R_ID').AsString;
+    FParamC := 'Update %s Set O_Memo=''$Memo'' Where R_ID=%s';
+    FParamC := Format(FParamC, [sTable_Order, nStr]);
+
+    CreateBaseFormItem(cFI_FormMemo, '', @nP);
+    if (FCommand <> cCmd_ModalResult) or (FParamA <> mrOK) then Exit;
   end;
+  {$ENDIF}
   nStr := SQLQuery.FieldByName('O_ID').AsString;
 
   if DeleteOrder(nStr) then ShowMsg('已成功删除记录', sHint);
@@ -297,99 +323,59 @@ begin
   end;
 end;
 
-procedure TfFramePurchaseOrder.ModifyWebOrderStatus(const nOid: string);
-var
-  nWebOrderId:string;
-  nXmlStr,nData,nSql:string;
+procedure TfFramePurchaseOrder.N7Click(Sender: TObject);
+var nStr,nTruck: string;
 begin
-  {$IFNDEF EnableWebMall}
-  Exit;
-  {$ENDIF}
-  
-  nWebOrderId := '';
-  //查询网上商城订单
-  nSql := 'select WOM_WebOrderID from %s where WOM_LID=''%s''';
-  nSql := Format(nSql,[sTable_WebOrderMatch,nOid]);
-  with FDM.QueryTemp(nSql) do
+  if cxView1.DataController.GetSelectedCount > 0 then
   begin
-    if recordcount>0 then
-    begin
-      nWebOrderId := FieldByName('WOM_WebOrderID').asstring;
-    end;
-  end;
-  if nWebOrderId='' then Exit;
+    nStr := SQLQuery.FieldByName('O_KFLS').AsString;
+    nTruck := nStr;
+    if not ShowInputBox('请输入新的矿发流水:', '修改', nTruck, 15) then Exit;
 
-  nXmlStr := '<?xml version="1.0" encoding="UTF-8"?>'
-      +'<DATA>'
-      +'<head><ordernumber>%s</ordernumber>'
-      +'<status>%d</status>'
-      +'</head>'
-      +'</DATA>';
-  nXmlStr := Format(nXmlStr,[nWebOrderId,2]);
-  nXmlStr := PackerEncodeStr(nXmlStr);
+    if (nTruck = '') or (nStr = nTruck) then Exit;
+    //无效或一致
 
-  nData := complete_shoporders(nXmlStr);
-  gSysLoger.AddLog(TfFramePurchaseOrder,'ModifyWebOrderStatus',nData);
-  if ndata<>'' then
-  begin
-    ShowMsg(nData,sHint);
+    nStr := SQLQuery.FieldByName('O_ID').AsString;
+
+    nStr := 'Update %s Set O_KFLS=''%s'' Where O_ID=''%s''';
+    nStr := Format(nStr, [sTable_Order, nTruck,
+            SQLQuery.FieldByName('O_ID').AsString]);
+    FDM.ExecuteSQL(nStr);
+
+    nStr := '修改矿发流水[ %s -> %s ].';
+    nStr := Format(nStr, [SQLQuery.FieldByName('O_KFLS').AsString, nTruck]);
+    FDM.WriteSysLog(sFlag_OrderItem, SQLQuery.FieldByName('O_ID').AsString, nStr, False);
+
+    InitFormData(FWhere);
+    ShowMsg('矿发流水修改成功', sHint);
   end;
 end;
 
-procedure TfFramePurchaseOrder.SendMsgToWebMall(const nOid: string);
-var
-  nXmlStr,nData:string;
+procedure TfFramePurchaseOrder.N8Click(Sender: TObject);
+var nStr,nTruck: string;
 begin
-  {$IFNDEF EnableWebMall}
-  Exit;
-  {$ENDIF}
-  
-  nXmlStr := '<?xml version="1.0" encoding="UTF-8"?>'
-        +'<DATA>'
-        +'<head>'
-        +'<Factory>%s</Factory>'
-        +'<ToUser>%s</ToUser>'
-        +'<MsgType>%d</MsgType>'
-        +'</head>'
-        +'<Items>'
-        +'	  <Item>'
-        +'	      <BillID>%s</BillID>'
-        +'	      <Card>%s</Card>'
-        +'	      <Truck>%s</Truck>'
-        +'	      <StockNo>%s</StockNo>'
-        +'	      <StockName>%s</StockName>'
-        +'	      <CusID>%s</CusID>'
-        +'	      <CusName>%s</CusName>'
-        +'	      <CusAccount>0</CusAccount>'
-        +'	      <MakeDate></MakeDate>'
-        +'	      <MakeMan></MakeMan>'
-        +'	      <TransID></TransID>'
-        +'	      <TransName></TransName>'
-        +'	      <Searial></Searial>'
-        +'	      <OutFact></OutFact>'
-        +'	      <OutMan></OutMan>'
-        +'	  </Item>	'
-        +'</Items>'
-        +'   <remark/>'
-        +'</DATA>';
-
-  nXmlStr := Format(nXmlStr,[gSysParam.FFactory,
-      SQLQuery.FieldByName('o_proid').AsString,
-      cSendWeChatMsgType_DelBill,
-      SQLQuery.FieldByName('o_id').AsString,
-      SQLQuery.FieldByName('o_card').AsString,
-      SQLQuery.FieldByName('o_truck').AsString,
-      SQLQuery.FieldByName('o_stockno').AsString,
-      SQLQuery.FieldByName('o_stockname').AsString,
-      SQLQuery.FieldByName('o_proid').AsString,
-      SQLQuery.FieldByName('o_proname').AsString]);
-  nXmlStr := PackerEncodeStr(nXmlStr);
-  nData := send_event_msg(nXmlStr);
-
-  gSysLoger.AddLog(TfFramePurchaseOrder,'SendMsgToWebMall',nData);
-  if ndata<>'' then
+  if cxView1.DataController.GetSelectedCount > 0 then
   begin
-    ShowMsg(nData,sHint);
+    nStr := SQLQuery.FieldByName('O_KFValue').AsString;
+    nTruck := nStr;
+    if not ShowInputBox('请输入新的矿发数量:', '修改', nTruck, 15) then Exit;
+
+    if (nTruck = '') or (nStr = nTruck) then Exit;
+    //无效或一致
+
+    nStr := SQLQuery.FieldByName('O_ID').AsString;
+
+    nStr := 'Update %s Set O_KFValue=''%s'' Where O_ID=''%s''';
+    nStr := Format(nStr, [sTable_Order, nTruck,
+            SQLQuery.FieldByName('O_ID').AsString]);
+    FDM.ExecuteSQL(nStr);
+
+    nStr := '修改矿发数量[ %s -> %s ].';
+    nStr := Format(nStr, [SQLQuery.FieldByName('O_KFValue').AsString, nTruck]);
+    FDM.WriteSysLog(sFlag_OrderItem, SQLQuery.FieldByName('O_ID').AsString, nStr, False);
+
+    InitFormData(FWhere);
+    ShowMsg('矿发数量修改成功', sHint);
   end;
 end;
 

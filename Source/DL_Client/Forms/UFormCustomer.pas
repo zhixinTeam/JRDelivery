@@ -12,7 +12,7 @@ uses
   UDataModule, UFormBase, cxGraphics, cxControls, cxLookAndFeels,
   cxLookAndFeelPainters, cxContainer, cxEdit, dxLayoutControl, cxCheckBox,
   cxLabel, StdCtrls, cxMaskEdit, cxDropDownEdit, cxMCListBox, cxMemo,
-  cxTextEdit;
+  cxTextEdit, dxSkinsCore, dxSkinsDefaultPainters, dxLayoutcxEditAdapters;
 
 type
   TfFormCustomer = class(TBaseForm)
@@ -351,6 +351,21 @@ begin
     ShowMsg('请填写客户名称', sHint); Exit;
   end;
 
+  {$IFDEF InfoOnly}
+  nStr := 'Select Count(*) From %s Where C_Name=''%s''';
+  nStr := Format(nStr, [sTable_Customer, EditName.Text]);
+  //xxxxx
+
+  with FDM.QueryTemp(nStr) do
+  if Fields[0].AsInteger > 0 then
+  begin
+    nStr := '客户[ %s ]已存在!!' + #13#10#13#10 +
+            '客户重名可能会导致回款、办卡等操作错误';
+    nStr := Format(nStr, [EditName.Text]);
+    ShowMsg(nStr, sHint);
+    Exit;
+  end;
+  {$ELSE}
   nStr := 'Select Count(*) From %s Where C_Name=''%s''';
   nStr := Format(nStr, [sTable_Customer, EditName.Text]);
 
@@ -366,12 +381,15 @@ begin
     nStr := Format(nStr, [EditName.Text]);
     if not QueryDlg(nStr, sAsk, Handle) then Exit;
   end;
+  {$ENDIF}
 
   nList := TStringList.Create;
   nList.Text := SF('C_PY', GetPinYinOfStr(EditName.Text));
 
   if FCustomerID = '' then
   begin
+    nList.Add(SF('C_FromNC', sFlag_No));
+    
     nID := GetSerialNo(sFlag_BusGroup, sFlag_Customer, False);
     if nID = '' then Exit;
     
@@ -393,8 +411,8 @@ begin
 
     if FDM.QueryTemp(nSQL).Fields[0].AsInteger < 1 then
     begin
-      nSQL := 'Insert Into %s(A_CID,A_Date) Values(''%s'', %s)';
-      nSQL := Format(nSQL, [sTable_CusAccount, nID, FDM.SQLServerNow]);
+      nSQL := 'Insert Into %s(A_CID,A_FromNC,A_Date) Values(''%s'', ''%s'', %s)';
+      nSQL := Format(nSQL, [sTable_CusAccount, nID, sFlag_No, FDM.SQLServerNow]);
       FDM.ExecuteSQL(nSQL);
     end;
 

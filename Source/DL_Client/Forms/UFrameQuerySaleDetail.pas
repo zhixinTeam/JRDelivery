@@ -4,6 +4,7 @@
 *******************************************************************************}
 unit UFrameQuerySaleDetail;
 
+{$I Link.inc}
 interface
 
 uses
@@ -14,7 +15,8 @@ uses
   cxMaskEdit, cxButtonEdit, cxTextEdit, ADODB, cxLabel, UBitmapPanel,
   cxSplitter, cxGridLevel, cxClasses, cxGridCustomView,
   cxGridCustomTableView, cxGridTableView, cxGridDBTableView, cxGrid,
-  ComCtrls, ToolWin;
+  ComCtrls, ToolWin, dxSkinsCore, dxSkinsDefaultPainters,
+  dxSkinscxPCPainter, dxLayoutcxEditAdapters;
 
 type
   TfFrameSaleDetailQuery = class(TfFrameNormal)
@@ -36,11 +38,13 @@ type
     dxLayout1Item4: TdxLayoutItem;
     EditBill: TcxButtonEdit;
     dxLayout1Item7: TdxLayoutItem;
+    N1: TMenuItem;
     procedure EditDatePropertiesButtonClick(Sender: TObject;
       AButtonIndex: Integer);
     procedure EditTruckPropertiesButtonClick(Sender: TObject;
       AButtonIndex: Integer);
     procedure mniN1Click(Sender: TObject);
+    procedure N1Click(Sender: TObject);
   private
     { Private declarations }
   protected
@@ -60,6 +64,8 @@ type
     procedure SummaryItemsGetText(Sender: TcxDataSummaryItem;
       const AValue: Variant; AIsFooter: Boolean; var AText: String);
     //处理摘要
+    function GetVal(const nRow: Integer; const nField: string): string;
+    //获取指定字段
   public
     { Public declarations }
     class function FrameID: integer; override;
@@ -116,22 +122,40 @@ function TfFrameSaleDetailQuery.InitFormDataSQL(const nWhere: string): string;
 begin
   FEnableBackDB := True;
   EditDate.Text := Format('%s 至 %s', [Date2Str(FStart), Date2Str(FEnd)]);
-  Result := 'Select *,(L_Value*L_Price) as L_Money From $Bill b ';
+
+  {$IFDEF SpecialControl}
+  MakeSaleViewData;
+  {$ENDIF}
+
+  {$IFDEF CastMoney}
+  Result := 'Select *,CAST((L_Value * L_Price) as decimal(38, 2)) as L_Money, ' +
+            '(P_MValue-P_PValue) As P_NetWeight From $Bill b ' +
+            'left join $Pound P on P.P_Bill = b.L_ID ';
+  {$ELSE}
+  Result := 'Select b.*,c.C_NCid,c.C_NCName,c.C_JxsId,c.C_JxsName,'+
+            '(L_Value*L_Price) as L_Money From $Bill b, $Cus C where '+
+            'L_CusID=C_ID ';
+  {$ENDIF}
 
   if FJBWhere = '' then
   begin
-    Result := Result + 'Where (L_OutFact>=''$S'' and L_OutFact <''$End'')';
+    Result := Result + 'and (L_OutFact>=''$S'' and L_OutFact <''$End'')';
 
     if nWhere <> '' then
       Result := Result + ' And (' + nWhere + ')';
     //xxxxx
   end else
   begin
-    Result := Result + ' Where (' + FJBWhere + ')';
+    Result := Result + ' and (' + FJBWhere + ')';
   end;
 
-  Result := MacroValue(Result, [MI('$Bill', sTable_Bill),
+  {$IFDEF CastMoney}
+  Result := MacroValue(Result, [MI('$Bill', sTable_Bill), MI('$Pound', sTable_PoundLog),
             MI('$S', Date2Str(FStart)), MI('$End', Date2Str(FEnd + 1))]);
+  {$ELSE}
+  Result := MacroValue(Result, [MI('$Bill', sTable_Bill), MI('$Cus', sTable_Customer),
+            MI('$S', Date2Str(FStart)), MI('$End', Date2Str(FEnd + 1))]);
+  {$ENDIF}
   //xxxxx
 end;
 
@@ -219,6 +243,48 @@ begin
   except
     //ignor any error
   end;
+end;
+
+procedure TfFrameSaleDetailQuery.N1Click(Sender: TObject);
+var nStr: string;
+    nIdx: Integer;
+    nList: TStrings;
+begin
+  if cxView1.DataController.GetSelectedCount < 1 then
+  begin
+    ShowMsg('请选择要编辑的记录', sHint); Exit;
+  end;
+
+  nList := TStringList.Create;
+  try
+    for nIdx := 0 to cxView1.DataController.RowCount - 1  do
+    begin
+
+      nStr := GetVal(nIdx,'L_ID');
+      if nStr = '' then
+        Continue;
+
+      nList.Add(nStr);
+    end;
+    nStr := AdjustListStrFormat2(nList, '''', True, ',', False);
+    PrintBillReport(nStr, False);
+  finally
+    nList.Free;
+  end;
+end;
+
+//Desc: 获取nRow行nField字段的内容
+function TfFrameSaleDetailQuery.GetVal(const nRow: Integer;
+ const nField: string): string;
+var nVal: Variant;
+begin
+  nVal := cxView1.ViewData.Rows[nRow].Values[
+            cxView1.GetColumnByFieldName(nField).Index];
+  //xxxxx
+
+  if VarIsNull(nVal) then
+       Result := ''
+  else Result := nVal;
 end;
 
 initialization

@@ -11,7 +11,7 @@ uses
   UDataModule, UFormBase, cxGraphics, cxControls, cxLookAndFeels,
   cxLookAndFeelPainters, cxContainer, cxEdit, dxLayoutControl, cxLabel,
   cxCheckBox, cxTextEdit, cxDropDownEdit, cxMCListBox, cxMaskEdit,
-  cxButtonEdit, StdCtrls, cxMemo, dxLayoutcxEditAdapters;
+  cxButtonEdit, StdCtrls, cxMemo;
 
 type
   TProviderParam = record

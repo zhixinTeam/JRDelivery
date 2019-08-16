@@ -12,10 +12,9 @@ uses
   ULibFun, IdTCPConnection, IdTCPClient, IdGlobal;
 
 const
-  cDisp_KeepLong         = 600;     //内容保持时长
-  cDisp_CtrlCardType     = 'YBKJ';
-  cDisp_Config           = 'LEDDisp.XML';
-
+  cDisp_KeepLong   = 600;     //内容保持时长
+  cDisp_CtrlCardType = 'YBKJ';
+  cDisp_Config     = 'LEDDisp.XML';
 type
   PDispCard = ^TDispCard;
   TDispCard = record
@@ -445,7 +444,6 @@ begin
   try
     for nIdx:=FBuffer.Count - 1 downto 0 do
     begin
-      WriteLog('zyww::进入循环');
       nContent := FBuffer[nIdx];
       if CompareText(nContent.FID, nCard.FID) <> 0 then Continue;
       if CompareText(nCard.FType, cDisp_CtrlCardType) = 0 then
@@ -455,13 +453,12 @@ begin
       end
       else
         ConvertStr(Char($40) + Char(nCard.FAddr) + nContent.FText + #13, nBuf);
-      WriteLog('zyww::connected上');
+
       if not nCard.FClient.Connected then
         nCard.FClient.Connect;
       //xxxxxx
-      WriteLog('zyww::connected下');
+
       nCard.FClient.Socket.Write(nBuf);
-      WriteLog('zyww::发送数据');
       nCard.FLastUpdate := GetTickCount;
     end;
   except
@@ -745,6 +742,37 @@ end;
 function PackSendData(const nBXDataRecord: TBXDataRecord):string;
 var nIdx, nLen: Integer;
 		nStrData: string;
+  function StrEscape(const AStr: string;const nIndex:Integer=1):string;
+  var
+    i : Integer;
+    ch:char;  
+  begin
+    Result:='';
+    for i:=nIndex to length(AStr)  do
+    begin
+      ch:=AStr[i];
+      
+      if IntToHex(Ord(ch),2) = 'A6' then
+      begin
+        Result := Result + Chr($A6) + chr($01);
+      end
+      else if IntToHex(Ord(ch),2) = 'A5' then
+      begin
+        Result := Result + Chr($A6) + chr($02);
+      end
+      else if IntToHex(Ord(ch),2) = '5B' then
+      begin
+        Result := Result + Chr($5B) + chr($01);
+      end
+      else if IntToHex(Ord(ch),2) = '5A' then
+      begin
+        Result := Result + Chr($5B) + chr($02);
+      end
+      else begin
+        Result := Result+ch;
+      end;
+    end;    
+  end;
 begin
 	Result := '';
 	
@@ -766,6 +794,7 @@ begin
 		//数据长度与数据本身
 		
 		Result := Result + Int2LHStr(YBCalcCRC16(@Result[9] , Length(Result)-8));
+		Result := Copy(Result,1,8)+StrEscape(Result,9);
 		Result := Result + Chr(FEnd);
 	end;	
 end;
@@ -878,7 +907,7 @@ begin
       nStrSend:=StringReplace(nTxt,Chr($A5), Chr($A6)+Chr($02), [rfReplaceAll]);
       nStrSend:=StringReplace(nTxt,Chr($5A), Chr($5B)+Chr($02), [rfReplaceAll]);
 
-      nTxt := Copy(nTxt, 1, 24);
+      //nTxt := Copy(nTxt, 1, 24);
       FData := ShowDynamicAreaData(nTxt);
       FDataLen := Length(FData);
     end;

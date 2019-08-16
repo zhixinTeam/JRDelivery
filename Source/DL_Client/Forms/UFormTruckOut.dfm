@@ -1,6 +1,6 @@
 inherited fFormTruckOut: TfFormTruckOut
-  Left = 326
-  Top = 109
+  Left = 294
+  Top = 214
   Width = 486
   Height = 566
   BorderStyle = bsSizeable
@@ -10,17 +10,17 @@ inherited fFormTruckOut: TfFormTruckOut
   PixelsPerInch = 96
   TextHeight = 12
   inherited dxLayout1: TdxLayoutControl
-    Width = 470
-    Height = 528
+    Width = 478
+    Height = 539
     inherited BtnOK: TButton
-      Left = 324
-      Top = 495
+      Left = 332
+      Top = 506
       Caption = #25918#34892
       TabOrder = 4
     end
     inherited BtnExit: TButton
-      Left = 394
-      Top = 495
+      Left = 402
+      Top = 506
       TabOrder = 5
     end
     object ListInfo: TcxMCListBox [2]
@@ -45,7 +45,7 @@ inherited fFormTruckOut: TfFormTruckOut
     end
     object ListBill: TcxListView [3]
       Left = 23
-      Top = 341
+      Top = 348
       Width = 350
       Height = 115
       Columns = <
@@ -77,8 +77,6 @@ inherited fFormTruckOut: TfFormTruckOut
       Top = 238
       ParentFont = False
       Properties.ReadOnly = True
-      Style.BorderColor = clWindowFrame
-      Style.BorderStyle = ebsSingle
       TabOrder = 2
       Width = 110
     end
@@ -87,47 +85,46 @@ inherited fFormTruckOut: TfFormTruckOut
       Top = 213
       ParentFont = False
       Properties.ReadOnly = True
-      Style.BorderColor = clWindowFrame
-      Style.BorderStyle = ebsSingle
       TabOrder = 1
       Width = 105
     end
     inherited dxLayout1Group_Root: TdxLayoutGroup
       inherited dxGroup1: TdxLayoutGroup
-        CaptionOptions.Text = #20132#36135#21333#20449#24687
+        Caption = #20132#36135#21333#20449#24687
         object dxLayout1Item3: TdxLayoutItem
-          AlignVert = avTop
-          CaptionOptions.Text = 'cxMCListBox1'
-          CaptionOptions.Visible = False
+          AutoAligns = [aaHorizontal]
+          Caption = 'cxMCListBox1'
+          ShowCaption = False
           Control = ListInfo
           ControlOptions.ShowBorder = False
         end
         object dxLayout1Group2: TdxLayoutGroup
-          CaptionOptions.Visible = False
-          ButtonOptions.Buttons = <>
+          ShowCaption = False
           Hidden = True
           ShowBorder = False
           object LayItem1: TdxLayoutItem
+            AutoAligns = [aaVertical]
             AlignHorz = ahClient
-            CaptionOptions.Text = #20132#36135#21333#21495':'
+            Caption = #20132#36135#21333#21495':'
             Control = EditBill
             ControlOptions.ShowBorder = False
           end
           object dxLayout1Item5: TdxLayoutItem
-            CaptionOptions.Text = #23458#25143#21517#31216':'
+            Caption = #23458#25143#21517#31216':'
             Control = EditCus
             ControlOptions.ShowBorder = False
           end
         end
       end
       object dxGroup2: TdxLayoutGroup [1]
+        AutoAligns = [aaHorizontal]
         AlignVert = avClient
-        CaptionOptions.Text = #20132#36135#21333#21015#34920
-        ButtonOptions.Buttons = <>
+        Caption = #20132#36135#21333#21015#34920
         object dxLayout1Item7: TdxLayoutItem
+          AutoAligns = [aaHorizontal]
           AlignVert = avClient
-          CaptionOptions.Text = 'cxListView1'
-          CaptionOptions.Visible = False
+          Caption = 'cxListView1'
+          ShowCaption = False
           Control = ListBill
           ControlOptions.ShowBorder = False
         end

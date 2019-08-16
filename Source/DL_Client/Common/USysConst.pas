@@ -18,11 +18,6 @@ const
   cShouJuIDLength       = 7;                         //财务收据标识长度
   cItemIconIndex        = 11;                        //默认的提货单列表图标
 
-  cSendWeChatMsgType_AddBill=1; //开提货单
-  cSendWeChatMsgType_OutFactory=2; //车辆出厂
-  cSendWeChatMsgType_Report=3; //报表
-  cSendWeChatMsgType_DelBill=4; //删提货单  
-  
 const
   {*Frame ID*}
   cFI_FrameSysLog       = $0001;                     //系统日志
@@ -39,6 +34,8 @@ const
   cFI_FrameMakeOCard    = $0015;                     //办理采购磁卡
   cFI_FrameMakeLSCard   = $0016;                     //厂内零售磁卡
   cFI_FrameSanPreHK     = $0017;                     //散装提货前预合单
+  cFI_FrameAuditTruck   = $0018;                     //审核车辆
+  cFI_FrameBillBuDanAudit = $0019;                     //补单审核
 
   cFI_FrameShouJu       = $0020;                     //收据查询
   cFI_FrameZhiKaVerify  = $0021;                     //纸卡审核
@@ -146,7 +143,7 @@ const
   cFI_FormPurchase      = $1055;                     //采购验收
   cFI_FormGetPOrderBase  = $1056;                    //采购订单
   cFI_FormOrderDtl      = $1057;                     //采购明细
-  cFI_FormGetWechartAccount = $1058;                 //获取商城注册信息
+  cFI_FormGetWXAccount  = $1058;                     //获取商城注册信息
 
   cFI_FormBatch         = $1064;                     //批次管理
   cFI_FormStockParam    = $1065;                     //品种管理
@@ -173,8 +170,13 @@ const
   cFI_FormWXSendlog     = $1092;                     //微信日志
   cFI_FormTodo          = $1093;                     //需干预事件
   cFI_FormTodoSend      = $1094;                     //推送事件
+  cFI_FormAuditTruck    = $1095;                     //车辆审核
 
   cFI_Form_HT_SalePlan  = $1100;                     //销售计划(红塔)
+  cFI_FrameTransBase    = $1103;                     //短倒办理
+  cFI_FormTransBase     = $1104;                     //短倒办理
+  cFI_FrameTransferDetailQuery = $1105;              //短倒查询
+  cFI_FormTransDetail   = $1106;                     //短倒详情
 
   {*Command*}
   cCmd_RefreshData      = $0002;                     //刷新数据
@@ -187,11 +189,14 @@ const
   cCmd_ViewData         = $1006;                     //查看数据
   cCmd_GetData          = $1007;                     //选择数据
 
-  cFI_FrameTransBase    = $0093;                     //短倒办理
-  cFI_FormTransBase     = $1095;                     //短倒办理
+  cSendWeChatMsgType_AddBill=1; //开提货单
+  cSendWeChatMsgType_OutFactory=2; //车辆出厂
+  cSendWeChatMsgType_Report=3; //报表
+  cSendWeChatMsgType_DelBill=4; //删提货单
 
-  cFI_FrameTransferDetailQuery = $0094;              //短倒明细查询
-  cFI_FormTransDetail   = $1096;                     //短倒办理
+  c_WeChatStatusCreateCard=0;  //订单已办卡
+  c_WeChatStatusFinished=1;  //订单已完成
+  c_WeChatStatusDeleted=2;  //订单已删除
 
 type
   TSysParam = record
@@ -200,7 +205,6 @@ type
     FMainTitle  : string;                            //主窗体标题
     FHintText   : string;                            //提示文本
     FCopyRight  : string;                            //主窗体提示内容
-    FFactory    : string;                            //工厂ID
 
     FUserID     : string;                            //用户标识
     FUserName   : string;                            //当前用户
@@ -218,7 +222,8 @@ type
     FLocalName  : string;                            //本机名称
     FMITServURL : string;                            //业务服务
     FHardMonURL : string;                            //硬件守护
-
+    FWechatURL  : string;                            //微信服务
+    
     FFactNum    : string;                            //工厂编号
     FSerialID   : string;                            //电脑编号
     FDepartment : string;                            //所属部门
@@ -236,8 +241,7 @@ type
     FPicPath    : string;                            //图片目录
     FVoiceUser  : Integer;                           //语音计数
     FProberUser : Integer;                           //检测器技术
-    FEmpTruckWc : Double;                            //空车出厂误差值
-    FMonitorType: string;                            //监装模式
+    FEmpTruckWc : Double;                            //空车出厂误差
   end;
   //系统参数
 
@@ -332,7 +336,6 @@ begin
 
   AddMenuModuleItem('MAIN_B01', cFI_FormBaseInfo, mtForm);
   AddMenuModuleItem('MAIN_B02', cFI_FrameCustomer);
-
   AddMenuModuleItem('MAIN_B03', cFI_FrameSalesMan);
   AddMenuModuleItem('MAIN_B04', cFI_FrameSaleContract);
 
@@ -354,6 +357,8 @@ begin
   AddMenuModuleItem('MAIN_D08', cFI_FormTruckEmpty, mtForm);
   AddMenuModuleItem('MAIN_D09', cFI_FrameMakeLSCard);
   AddMenuModuleItem('MAIN_D10', cFI_FrameSanPreHK);
+  AddMenuModuleItem('MAIN_D11', cFI_FrameAuditTruck);
+  AddMenuModuleItem('MAIN_D12', cFI_FrameBillBuDanAudit);
 
   AddMenuModuleItem('MAIN_E01', cFI_FramePoundManual);
   AddMenuModuleItem('MAIN_E02', cFI_FramePoundAuto);

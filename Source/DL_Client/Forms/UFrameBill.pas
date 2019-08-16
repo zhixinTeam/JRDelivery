@@ -15,7 +15,8 @@ uses
   cxGridCustomTableView, cxGridTableView, cxGridDBTableView, cxGrid,
   ComCtrls, ToolWin, cxTextEdit, cxMaskEdit, cxButtonEdit, Menus,
   UBitmapPanel, cxSplitter, cxLookAndFeels, cxLookAndFeelPainters,
-  cxCheckBox, dxLayoutcxEditAdapters;
+  cxCheckBox, dxSkinsCore, dxSkinsDefaultPainters, dxSkinscxPCPainter,
+  dxLayoutcxEditAdapters;
 
 type
   TfFrameBill = class(TfFrameNormal)
@@ -68,6 +69,7 @@ type
     procedure CheckDeleteClick(Sender: TObject);
     procedure N10Click(Sender: TObject);
     procedure N11Click(Sender: TObject);
+    procedure cxView1DblClick(Sender: TObject);
     procedure N12Click(Sender: TObject);
     procedure N13Click(Sender: TObject);
   protected
@@ -81,8 +83,6 @@ type
     function InitFormDataSQL(const nWhere: string): string; override;
     procedure AfterInitFormData; override;
     {*查询SQL*}
-    procedure SendMsgToWebMall(const nBillno:string);
-    procedure ModifyWebOrderStatus(const nLId:string);
   public
     { Public declarations }
     class function FrameID: integer; override;
@@ -93,8 +93,7 @@ implementation
 {$R *.dfm}
 uses
   ULibFun, UMgrControl, UDataModule, UFormBase, UFormInputbox, USysPopedom,
-  USysConst, USysDB, USysBusiness, UFormDateFilter,UBusinessPacker,USysLoger,
-  UBusinessConst;
+  USysConst, USysDB, USysBusiness, UFormDateFilter;
 
 //------------------------------------------------------------------------------
 class function TfFrameBill.FrameID: integer;
@@ -126,11 +125,16 @@ begin
   Result := 'Select * From $Bill ';
   //提货单
 
+  {$IFDEF AlwaysUseDate}
+  Result := Result + 'Where (L_Date>=''$ST'' and L_Date <''$End'')';
+  nStr := ' And ';
+  {$ELSE}
   if (nWhere = '') or FUseDate then
   begin
     Result := Result + 'Where (L_Date>=''$ST'' and L_Date <''$End'')';
     nStr := ' And ';
   end else nStr := ' Where ';
+  {$ENDIF}
 
   if nWhere <> '' then
     Result := Result + nStr + '(' + nWhere + ')';
@@ -232,29 +236,30 @@ end;
 
 //Desc: 删除
 procedure TfFrameBill.BtnDelClick(Sender: TObject);
-var nStr, nId: string;
+var nStr: string;
+    nP: TFormCommandParam;
 begin
   if cxView1.DataController.GetSelectedCount < 1 then
   begin
     ShowMsg('请选择要删除的记录', sHint); Exit;
   end;
 
-  nId := SQLQuery.FieldByName('L_ID').AsString;
+  with nP do
+  begin
+    nStr := SQLQuery.FieldByName('L_ID').AsString;
+    nStr := Format('请填写删除[ %s ]单据的原因', [nStr]);
 
-  nStr := '确定要删除编号为[ %s ]的单据吗?';
-  nStr := Format(nStr, [nid]);
-  if not QueryDlg(nStr, sAsk) then Exit;
+    FCommand := cCmd_EditData;
+    FParamA := nStr;
+    FParamB := 320;
+    FParamD := 2;
 
-  //推送公众号消息
-  try
-    SendMsgToWebMall(SQLQuery.FieldByName('L_ID').AsString);
-    nStr := 'update %s set WOM_deleted=''%s'' where WOM_LID=''%s''';
-    nStr := Format(nStr,[sTable_WebOrderMatch,sFlag_Yes,SQLQuery.FieldByName('L_ID').AsString]);
-    fdm.ExecuteSQL(nStr);
-    //修改商城订单状态
-    ModifyWebOrderStatus(SQLQuery.FieldByName('L_ID').AsString);    
-  except
-    //不处理异常
+    nStr := SQLQuery.FieldByName('R_ID').AsString;
+    FParamC := 'Update %s Set L_Memo=''$Memo'' Where R_ID=%s';
+    FParamC := Format(FParamC, [sTable_Bill, nStr]);
+
+    CreateBaseFormItem(cFI_FormMemo, '', @nP);
+    if (FCommand <> cCmd_ModalResult) or (FParamA <> mrOK) then Exit;
   end;
 
   if DeleteBill(SQLQuery.FieldByName('L_ID').AsString) then
@@ -262,6 +267,12 @@ begin
     InitFormData(FWhere);
     ShowMsg('提货单已删除', sHint);
   end;
+
+  try
+    SaveWebOrderDelMsg(SQLQuery.FieldByName('L_ID').AsString,sFlag_Sale);
+  except
+  end;
+  //插入删除推送
 end;
 
 //Desc: 打印提货单
@@ -290,9 +301,30 @@ end;
 //Desc: 修改未进厂车牌号
 procedure TfFrameBill.N5Click(Sender: TObject);
 var nStr,nTruck: string;
+    nP: TFormCommandParam;
 begin
   if cxView1.DataController.GetSelectedCount > 0 then
   begin
+    {$IFDEF ForceMemo}
+    with nP do
+    begin
+      nStr := SQLQuery.FieldByName('L_ID').AsString;
+      nStr := Format('请填写修改[ %s ]单据车牌号的原因', [nStr]);
+
+      FCommand := cCmd_EditData;
+      FParamA := nStr;
+      FParamB := 320;
+      FParamD := 2;
+
+      nStr := SQLQuery.FieldByName('R_ID').AsString;
+      FParamC := 'Update %s Set L_Memo=''$Memo'' Where R_ID=%s';
+      FParamC := Format(FParamC, [sTable_Bill, nStr]);
+
+      CreateBaseFormItem(cFI_FormMemo, '', @nP);
+      if (FCommand <> cCmd_ModalResult) or (FParamA <> mrOK) then Exit;
+    end;
+    {$ENDIF}
+
     nStr := SQLQuery.FieldByName('L_Truck').AsString;
     nTruck := nStr;
     if not ShowInputBox('请输入新的车牌号码:', '修改', nTruck, 15) then Exit;
@@ -316,9 +348,30 @@ end;
 //Desc: 修改封签号
 procedure TfFrameBill.N7Click(Sender: TObject);
 var nStr,nID,nSeal,nSave: string;
+    nP: TFormCommandParam;
 begin
   if cxView1.DataController.GetSelectedCount > 0 then
   begin
+    {$IFDEF ForceMemo}
+    with nP do
+    begin
+      nStr := SQLQuery.FieldByName('L_ID').AsString;
+      nStr := Format('请填写修改[ %s ]单据封签号的原因', [nStr]);
+
+      FCommand := cCmd_EditData;
+      FParamA := nStr;
+      FParamB := 320;
+      FParamD := 2;
+
+      nStr := SQLQuery.FieldByName('R_ID').AsString;
+      FParamC := 'Update %s Set L_Memo=''$Memo'' Where R_ID=%s';
+      FParamC := Format(FParamC, [sTable_Bill, nStr]);
+
+      CreateBaseFormItem(cFI_FormMemo, '', @nP);
+      if (FCommand <> cCmd_ModalResult) or (FParamA <> mrOK) then Exit;
+    end;
+    {$ENDIF}
+
     {$IFDEF BatchInHYOfBill}
     nSave := 'L_HYDan';
     {$ELSE}
@@ -333,7 +386,7 @@ begin
     //无效或一致
     nID := SQLQuery.FieldByName('L_ID').AsString;
 
-    nStr := '确定要将交货单[ %s ]的封签号改为[ %s ]吗?';
+    nStr := '确定要将交货单[ %s ]的封签号该为[ %s ]吗?';
     nStr := Format(nStr, [nID, nSeal]);
     if not QueryDlg(nStr, sAsk) then Exit;
 
@@ -394,17 +447,45 @@ begin
               SQLQuery.FieldByName('L_StockName').AsString,
               SQLQuery.FieldByName('L_Value').AsFloat]);
       if not QueryDlg(nStr, sAsk) then Exit;
-    end;
 
-    nStr := SQLQuery.FieldByName('L_ID').AsString;
-    if BillSaleAdjust(nStr, nP.FParamB) then
-    begin
-      nTmp := '销售调拨给纸卡[ %s ].';
-      nTmp := Format(nTmp, [nP.FParamB]);
+      {$IFDEF ForceMemo}
+      with nP do
+      begin
+        nStr := SQLQuery.FieldByName('L_ID').AsString;
+        nStr := Format('请填写调拨[ %s ]单据的原因', [nStr]);
 
-      FDM.WriteSysLog(sFlag_BillItem, nStr, nTmp, False);
-      InitFormData(FWhere);
-      ShowMsg('调拨成功', sHint);
+        FCommand := cCmd_EditData;
+        FParamA := nStr;
+        FParamB := 320;
+        FParamD := 2;
+
+        nStr := SQLQuery.FieldByName('R_ID').AsString;
+        FParamC := 'Update %s Set L_Memo=''$Memo'' Where R_ID=%s';
+        FParamC := Format(FParamC, [sTable_Bill, nStr]);
+
+        CreateBaseFormItem(cFI_FormMemo, '', @nP);
+        if (FCommand <> cCmd_ModalResult) or (FParamA <> mrOK) then Exit;
+      end;
+      {$ENDIF}
+
+      nStr := SQLQuery.FieldByName('L_ID').AsString;
+      if BillSaleAdjust(nStr, nP.FParamB) then
+      begin
+        nTmp := '执行提货调拨操作,明细:提货单[ %s ]销售调拨给纸卡[ %s ].'+
+                '从客户: %s.%s.到客户: %s.%s.品  种: %s.%s.调拨量: %.2f吨.';
+        nTmp := Format(nTmp, [nStr, nP.FParamB,
+                SQLQuery.FieldByName('L_CusID').AsString,
+                SQLQuery.FieldByName('L_CusName').AsString,
+                FieldByName('C_ID').AsString,
+                FieldByName('C_Name').AsString,
+                SQLQuery.FieldByName('L_StockNo').AsString,
+                SQLQuery.FieldByName('L_StockName').AsString,
+                SQLQuery.FieldByName('L_Value').AsFloat]);
+
+        FDM.WriteSysLog(sFlag_BillItem, nStr, nTmp, False);
+        InitFormData(FWhere);
+        ShowMsg('调拨成功', sHint);
+      end;
     end;
   end;
 end;
@@ -429,152 +510,90 @@ begin
   end;
 end;
 
-procedure TfFrameBill.N12Click(Sender: TObject);
+procedure TfFrameBill.cxView1DblClick(Sender: TObject);
 var nStr: string;
+    nP: TFormCommandParam;
+begin
+  if (not CheckDelete.Checked) or
+     (cxView1.DataController.GetSelectedCount < 1) then Exit;
+  //只修改删除记录的备注信息
+
+  with nP do
+  begin
+    FCommand := cCmd_EditData;
+    FParamA := SQLQuery.FieldByName('L_Memo').AsString;
+    FParamB := 320;
+    FParamD := 2;
+
+    nStr := SQLQuery.FieldByName('R_ID').AsString;
+    FParamC := 'Update %s Set L_Memo=''$Memo'' Where R_ID=%s';
+    FParamC := Format(nP.FParamC, [sTable_BillBak, nStr]);
+
+    CreateBaseFormItem(cFI_FormMemo, '', @nP);
+    if (nP.FCommand = cCmd_ModalResult) and (nP.FParamA = mrOK) then
+      InitFormData(FWhere);
+    //display
+  end;
+end;
+
+procedure TfFrameBill.N12Click(Sender: TObject);
+var
+  nID, nSQL:string;
 begin
   if cxView1.DataController.GetSelectedCount > 0 then
   begin
-    nStr := SQLQuery.FieldByName('L_ID').AsString;
-    PrintHuaYanReport(nStr, False);
+    nID :=  SQLQuery.FieldByName('L_ID').AsString;
+    if SQLQuery.FieldByName('L_SyncStatus').AsString = sflag_yes then
+    begin
+      ShowMessage('该提货单已经同步成功，无需重复同步.');
+      Exit;
+    end;
+    if (SQLQuery.FieldByName('l_outfact').AsString = '')or
+      (SQLQuery.FieldByName('L_status').AsString <> sFlag_TruckOut) then
+    begin
+      ShowMessage('该提货单尚未出厂，不能同步.');
+      Exit;
+    end;
+
+    if not SyncBillToErp(nID) then
+    begin
+      ShowMessage('同步单据失败.');
+      exit;
+    end
+    else
+    begin
+      nSQL := 'update %s set L_SyncStatus=''%s'' Where L_ID =''%s''';
+      nSQL := Format(nSQL, [sTable_Bill, sFlag_Yes,nID]);
+      FDM.ExecuteSQL(nSQL);
+
+      InitFormData(FWhere);
+      ShowMsg('同步单据成功.',sHint);
+    end;
   end;
 end;
 
 procedure TfFrameBill.N13Click(Sender: TObject);
 var
-  nPrc, nStr: string;
+  nID, nSQL:string;
 begin
   if cxView1.DataController.GetSelectedCount > 0 then
   begin
-    nStr := SQLQuery.FieldByName('L_Price').AsString;
-    nPrc := nStr;
-    if not ShowInputBox('请输入新的价格:', '修改', nPrc, 15) then Exit;
+    nID :=  SQLQuery.FieldByName('L_ID').AsString;
 
-    try
-      StrToFloat(nPrc);
-    except
-      ShowMessage('请输入正确的价格！');
+    if (SQLQuery.FieldByName('l_outfact').AsString = '')or
+      (SQLQuery.FieldByName('L_status').AsString <> sFlag_TruckOut) then
+    begin
+      ShowMessage('该提货单尚未出厂，不能同步.');
       Exit;
     end;
 
-    if (nPrc = '') or (nStr = nPrc) then Exit;
-    //无效或一致
-
-    nStr := SQLQuery.FieldByName('L_ID').AsString;
-    if ChangePrc(nStr, nPrc) then
+    if not SyncBillToBakDB(nID) then
     begin
-      nStr := '修改价格[ %s -> %s ].';
-      nStr := Format(nStr, [SQLQuery.FieldByName('L_Price').AsString, nPrc]);
-      FDM.WriteSysLog(sFlag_BillItem, SQLQuery.FieldByName('L_ID').AsString, nStr, False);
-
-      InitFormData(FWhere);
-      ShowMsg('价格修改成功', sHint);
-    end;
-  end;
-end;
-
-procedure TfFrameBill.ModifyWebOrderStatus(const nLId: string);
-var
-  nWebOrderId:string;
-  nXmlStr,nData,nSql:string;
-begin
-  {$IFNDEF EnableWebMall}
-  Exit;
-  {$ENDIF}
-  
-  nWebOrderId := '';
-  //查询网上商城订单
-  nSql := 'select WOM_WebOrderID from %s where WOM_LID=''%s''';
-  nSql := Format(nSql,[sTable_WebOrderMatch,nLId]);
-  with FDM.QueryTemp(nSql) do
-  begin
-    if recordcount>0 then
-    begin
-      nWebOrderId := FieldByName('WOM_WebOrderID').asstring;
-    end;
-  end;
-  if nWebOrderId='' then Exit;
-
-  nXmlStr := '<?xml version="1.0" encoding="UTF-8"?>'
-      +'<DATA>'
-      +'<head><ordernumber>%s</ordernumber>'
-      +'<status>%d</status>'
-      +'</head>'
-      +'</DATA>';
-  nXmlStr := Format(nXmlStr,[nWebOrderId,2]);
-  nXmlStr := PackerEncodeStr(nXmlStr);
-
-  nData := complete_shoporders(nXmlStr);
-  gSysLoger.AddLog(TfFrameBill,'ModifyWebOrderStatus',nData);
-  if ndata<>'' then
-  begin
-    ShowMsg(nData,sHint);
-  end;
-end;
-procedure TfFrameBill.SendMsgToWebMall(const nBillno: string);
-var
-  nSql:string;
-  nDs:TDataSet;
-
-  nBills: TLadingBillItems;
-  nXmlStr,nData:string;
-  i:Integer;
-  nItem:TLadingBillItem;
-begin
-  {$IFNDEF EnableWebMall}
-  Exit;
-  {$ENDIF}
-  
-  //加载提货单信息
-  if not GetLadingBills(nBillno, sFlag_BillDel, nBills) then
-  begin
-    Exit;
-  end;
-
-  //调用web接口发送消息
-  for i := Low(nBills) to High(nBills) do
-  begin
-    nItem := nBills[i];
-
-    nXmlStr := '<?xml version="1.0" encoding="UTF-8"?>'
-        +'<DATA>'
-        +'<head>'
-        +'<Factory>%s</Factory>'
-        +'<ToUser>%s</ToUser>'
-        +'<MsgType>%d</MsgType>'
-        +'</head>'
-        +'<Items>'
-        +'	  <Item>'
-        +'	      <BillID>%s</BillID>'
-        +'	      <Card>%s</Card>'
-        +'	      <Truck>%s</Truck>'
-        +'	      <StockNo>%s</StockNo>'
-        +'	      <StockName>%s</StockName>'
-        +'	      <CusID>%s</CusID>'
-        +'	      <CusName>%s</CusName>'
-        +'	      <CusAccount>0</CusAccount>'
-        +'	      <MakeDate></MakeDate>'
-        +'	      <MakeMan></MakeMan>'
-        +'	      <TransID></TransID>'
-        +'	      <TransName></TransName>'
-        +'	      <Searial></Searial>'
-        +'	      <OutFact></OutFact>'
-        +'	      <OutMan></OutMan>'
-        +'	  </Item>	'
-        +'</Items>'
-        +'   <remark/>'
-        +'</DATA>';
-    nXmlStr := Format(nXmlStr,[gSysParam.FFactory, nItem.FCusID,cSendWeChatMsgType_DelBill,
-          nItem.FID,nItem.FCard,nitem.FTruck,
-          nItem.FStockNo,nItem.FStockName,nItem.FCusID,
-          nItem.FCusName]);
-    nXmlStr := PackerEncodeStr(nXmlStr);
-    nData := send_event_msg(nXmlStr);
-    gSysLoger.AddLog(TfFrameBill,'SendMsgToWebMall',nData);
-
-    if ndata<>'' then
-    begin
-      ShowMsg(nData,sHint);
-    end;
+      ShowMessage('同步单据失败,请重试.');
+      exit;
+    end
+    else
+      ShowMsg('同步成功.',sHint);
   end;
 end;
 

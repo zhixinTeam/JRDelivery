@@ -28,8 +28,6 @@ inherited fFrameBatcode: TfFrameBatcode
       Top = 93
       Hint = 'T.B_Name'
       ParentFont = False
-      Style.BorderColor = clWindowFrame
-      Style.BorderStyle = ebsSingle
       TabOrder = 1
       Width = 125
     end
@@ -43,9 +41,6 @@ inherited fFrameBatcode: TfFrameBatcode
           Kind = bkEllipsis
         end>
       Properties.OnButtonClick = EditNamePropertiesButtonClick
-      Style.BorderColor = clWindowFrame
-      Style.BorderStyle = ebsSingle
-      Style.ButtonStyle = btsHotFlat
       TabOrder = 0
       OnKeyPress = OnCtrlKeyPress
       Width = 125
@@ -55,8 +50,6 @@ inherited fFrameBatcode: TfFrameBatcode
       Top = 93
       Hint = 'T.B_Prefix'
       ParentFont = False
-      Style.BorderColor = clWindowFrame
-      Style.BorderStyle = ebsSingle
       TabOrder = 2
       Width = 125
     end
@@ -65,32 +58,30 @@ inherited fFrameBatcode: TfFrameBatcode
       Top = 93
       Hint = 'T.B_LastDate'
       ParentFont = False
-      Style.BorderColor = clWindowFrame
-      Style.BorderStyle = ebsSingle
       TabOrder = 3
       Width = 125
     end
     inherited dxGroup1: TdxLayoutGroup
       inherited GroupSearch1: TdxLayoutGroup
         object dxLayout1Item2: TdxLayoutItem
-          CaptionOptions.Text = #29289#26009#21517#31216':'
+          Caption = #29289#26009#21517#31216':'
           Control = EditName
           ControlOptions.ShowBorder = False
         end
       end
       inherited GroupDetail1: TdxLayoutGroup
         object dxLayout1Item1: TdxLayoutItem
-          CaptionOptions.Text = #29289#26009#21517#31216':'
+          Caption = #29289#26009#21517#31216':'
           Control = cxTextEdit1
           ControlOptions.ShowBorder = False
         end
         object dxLayout1Item4: TdxLayoutItem
-          CaptionOptions.Text = #32534#21495#21069#32512':'
+          Caption = #32534#21495#21069#32512':'
           Control = cxTextEdit2
           ControlOptions.ShowBorder = False
         end
         object dxLayout1Item3: TdxLayoutItem
-          CaptionOptions.Text = #19978#27425#26356#26032':'
+          Caption = #19978#27425#26356#26032':'
           Control = cxTextEdit3
           ControlOptions.ShowBorder = False
         end

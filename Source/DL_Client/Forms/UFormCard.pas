@@ -10,7 +10,8 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   CPort, CPortTypes, UFormNormal, UFormBase, cxControls, cxLookAndFeels,
   cxLookAndFeelPainters, cxContainer, cxEdit, cxLabel, cxTextEdit,
-  dxLayoutControl, StdCtrls, cxGraphics, dxLayoutcxEditAdapters;
+  dxLayoutControl, StdCtrls, cxGraphics, dxSkinsCore,
+  dxSkinsDefaultPainters, dxLayoutcxEditAdapters;
 
 type
   TfFormCard = class(TfFormNormal)
@@ -45,8 +46,7 @@ implementation
 
 {$R *.dfm}
 uses
-  IniFiles, ULibFun, UMgrControl, USysBusiness, USmallFunc, USysConst, USysDB,
-  UDataModule;
+  IniFiles, ULibFun, UMgrControl, USysBusiness, USmallFunc, USysConst, USysDB;
 
 type
   TReaderType = (ptT800, pt8142);
@@ -87,12 +87,8 @@ begin
     end else
     begin
       if FParam.FParamC=sFlag_Provide then
-        dxLayout1Item3.Caption := '采购单号'
-      else
-      if FParam.FParamC=sFlag_DuanDao then
-        dxLayout1Item3.Caption := '短倒单号'
-      else
-        dxLayout1Item3.Caption := '交货单号';
+           dxLayout1Item3.Caption := '采购单号'
+      else dxLayout1Item3.Caption := '交货单号';
     end;
 
     InitFormData;
@@ -209,7 +205,6 @@ end;
 //Desc: 保存磁卡
 procedure TfFormCard.BtnOKClick(Sender: TObject);
 var nRet: Boolean;
-  nStr : string;
 begin
   EditCard.Text := Trim(EditCard.Text);
   if EditCard.Text = '' then
@@ -221,39 +216,6 @@ begin
     Exit;
   end;
 
-  nStr := 'select * from %s where L_Card = ''%s''';
-  nStr := Format(nStr,[sTable_Bill,EditCard.Text]);
-  with FDM.QueryTemp(nStr) do
-  begin
-    if recordcount > 0 then
-    begin
-      ShowMsg('磁卡在交货单['+fieldbyname('L_ID').asstring+']完成前禁止开单.',sHint);
-      exit;
-    end;
-  end;
-
-  nStr := 'select * from %s where O_Card = ''%s''';
-  nStr := Format(nStr,[sTable_Order,EditCard.Text]);
-  with FDM.QueryTemp(nStr) do
-  begin
-    if recordcount > 0 then
-    begin
-      ShowMsg('磁卡在采购单['+fieldbyname('O_ID').asstring+']完成前禁止开单.',sHint);
-      exit;
-    end;
-  end;
-
-  nStr := 'select * from %s where B_Card = ''%s''';
-  nStr := Format(nStr,[sTable_TransBase,EditCard.Text]);
-  with FDM.QueryTemp(nStr) do
-  begin
-    if recordcount > 0 then
-    begin
-      ShowMsg('磁卡在短倒单['+fieldbyname('B_ID').asstring+']完成前禁止开单.',sHint);
-      exit;
-    end;
-  end;
-
   if FParam.FCommand = cCmd_GetData then
   begin
     ModalResult := mrOk;
@@ -261,12 +223,12 @@ begin
   end;
 
   if FParam.FParamC = sFlag_Provide then
-       nRet := SaveOrderCard(EditBill.Text, EditCard.Text)
+    nRet := SaveOrderCard(EditBill.Text, EditCard.Text)
   else
   if FParam.FParamC = sFlag_DuanDao then
-       nRet := SaveDDCard(EditBill.Text, EditCard.Text)
-
-  else nRet := SaveBillCard(EditBill.Text, EditCard.Text);
+    nRet := SaveDDCard(EditBill.Text, EditCard.Text)
+  else
+    nRet := SaveBillCard(EditBill.Text, EditCard.Text);
 
   if nRet then
     ModalResult := mrOk;

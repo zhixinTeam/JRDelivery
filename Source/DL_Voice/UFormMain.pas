@@ -57,7 +57,7 @@ implementation
 {$R *.dfm}
 uses
   IniFiles, Registry, ULibFun, USysLoger, UMgrVoice, UMgrRemoteVoice,
-  UMgrVoiceNet;
+  UMgrVoiceNet, UMemDataPool;
 
 var
   gPath: string;               //程序路径
@@ -109,6 +109,9 @@ begin
     nIni.Free;
     nReg.Free;
   end;
+
+  gMemDataManager := TMemDataManager.Create;
+  //内存管理器
 
   if FNetVoice then
   begin

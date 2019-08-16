@@ -205,9 +205,12 @@ begin
   N6.Enabled := N5.Enabled;
   //ÅçÂë»úÆôÍ£
 
-  nInt := Integer(dxChart1.Selected.Data);
-  N5.Checked := FLines[nInt].FPrinterOK;
-  N6.Checked := not N5.Checked;
+  if Assigned(dxChart1.Selected) then
+  begin
+    nInt := Integer(dxChart1.Selected.Data);
+    N5.Checked := FLines[nInt].FPrinterOK;
+    N6.Checked := not N5.Checked;
+  end;
 end;
 
 //------------------------------------------------------------------------------

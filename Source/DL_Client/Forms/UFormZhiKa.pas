@@ -12,7 +12,8 @@ uses
   cxLookAndFeelPainters, ComCtrls, cxContainer, cxEdit, Menus,
   cxDropDownEdit, cxCalendar, cxCheckBox, cxLabel, cxMaskEdit,
   cxButtonEdit, cxTextEdit, cxListView, dxLayoutControl, StdCtrls,
-  dxLayoutcxEditAdapters, UFormBaseInfo;
+  dxSkinsCore, dxSkinsDefaultPainters, dxLayoutcxEditAdapters,
+  UFormBaseInfo;
 
 type
   TStockItem = record
@@ -90,7 +91,7 @@ type
     procedure BtnOKClick(Sender: TObject);
     procedure EditCustomKeyPress(Sender: TObject; var Key: Char);
     procedure EditPricePropertiesEditValueChanged(Sender: TObject);
-    procedure cxButtonEdit1PropertiesButtonClick(Sender: TObject;
+    procedure EditAreaPropertiesButtonClick(Sender: TObject;
       AButtonIndex: Integer);
   protected
     { Protected declarations }
@@ -469,6 +470,7 @@ begin
     //EditPName.Properties.ReadOnly := not FZhiKa.FIsXuNi;
     EditSMan.Properties.ReadOnly := not FZhiKa.FIsXuNi;
     EditCustom.Properties.ReadOnly := not FZhiKa.FIsXuNi;
+    EditArea.Text := FieldByName('C_Area').AsString;
 
     if FZhiKa.FIsXuNi then
     begin
@@ -717,12 +719,6 @@ begin
   begin
     Result := IsNumber(EditMoney.Text, True) and (StrToFloat(EditMoney.Text) >= 0);
     nHint := '请输入有效的预付金额';
-  end else
-
-  if Sender = EditArea then
-  begin
-    Result := EditArea.Text <> '';
-    nHint := '请填写有效区域编码';
   end;
 end;
 
@@ -786,7 +782,8 @@ begin
     nList.Add(Format('Z_Lading=''%s''', [GetCtrlData(EditLading)]));
     nList.Add(Format('Z_ValidDays=''%s''', [Date2Str(EditDays.Date)]));
     nList.Add(Format('Z_YFMoney=%s', [EditMoney.Text]));
-    nList.Add(Format('Z_AreaCode=''%s''', [Trim(EditArea.Text)]));   //2017-09-13 区域编码
+    nList.Add(Format('Z_AreaCode=''%s''', [Trim(EditArea.Text)]));   
+
     if FRecordID = '' then
     begin
       nZID := GetSerialNo(sFlag_BusGroup, sFlag_ZhiKa, True);
@@ -880,7 +877,7 @@ begin
   ShowMsg('纸卡已保存', sHint);
 end;
 
-procedure TfFormZhiKa.cxButtonEdit1PropertiesButtonClick(Sender: TObject;
+procedure TfFormZhiKa.EditAreaPropertiesButtonClick(Sender: TObject;
   AButtonIndex: Integer);
 var nBool,nSelected: Boolean;
 begin

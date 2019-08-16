@@ -62,13 +62,19 @@ type
     class function FunctionName: string; override;
     function GetFixedServiceURL: string; override;
   end;
-  
+
+  TClientBusinessWechat = class(TClient2MITWorker)
+  public
+    function GetFlagStr(const nFlag: Integer): string; override;
+    class function FunctionName: string; override;
+    function GetFixedServiceURL: string; override;
+  end;
+
   TClientBusinessDuanDao = class(TClient2MITWorker)
   public
     function GetFlagStr(const nFlag: Integer): string; override;
     class function FunctionName: string; override;
   end;
-
 implementation
 
 uses
@@ -312,21 +318,6 @@ begin
   end;
 end;
 
-class function TClientBusinessDuanDao.FunctionName: string;
-begin
-  Result := sCLI_BusinessDuanDao;
-end;
-
-function TClientBusinessDuanDao.GetFlagStr(const nFlag: Integer): string;
-begin
-  Result := inherited GetFlagStr(nFlag);
-
-  case nFlag of
-   cWorker_GetPackerName : Result := sBus_BusinessCommand;
-   cWorker_GetMITName    : Result := sBus_BusinessDuanDao;
-  end;
-end;
-
 //------------------------------------------------------------------------------
 class function TClientBusinessHardware.FunctionName: string;
 begin
@@ -348,11 +339,49 @@ begin
   Result := gSysParam.FHardMonURL;
 end;
 
+//------------------------------------------------------------------------------
+class function TClientBusinessWechat.FunctionName: string;
+begin
+  Result := sCLI_BusinessWebchat;
+end;
+
+function TClientBusinessWechat.GetFlagStr(const nFlag: Integer): string;
+begin
+  Result := inherited GetFlagStr(nFlag);
+
+  case nFlag of
+   cWorker_GetPackerName : Result := sBus_BusinessWebchat;
+   cWorker_GetMITName    : Result := sBus_BusinessWebchat;
+  end;
+end;
+
+function TClientBusinessWechat.GetFixedServiceURL: string;
+begin
+  Result := gSysParam.FWechatURL;
+end;
+
+{ TClientBusinessDuanDao }
+
+class function TClientBusinessDuanDao.FunctionName: string;
+begin
+  Result := sCLI_BusinessDuanDao;
+end;
+
+function TClientBusinessDuanDao.GetFlagStr(const nFlag: Integer): string;
+begin
+  Result := inherited GetFlagStr(nFlag);
+
+  case nFlag of
+   cWorker_GetPackerName : Result := sBus_BusinessCommand;
+   cWorker_GetMITName    : Result := sBus_BusinessDuanDao;
+  end;
+end;
 initialization
   gBusinessWorkerManager.RegisteWorker(TClientWorkerQueryField);
   gBusinessWorkerManager.RegisteWorker(TClientBusinessCommand);
   gBusinessWorkerManager.RegisteWorker(TClientBusinessSaleBill);
   gBusinessWorkerManager.RegisteWorker(TClientBusinessHardware);
   gBusinessWorkerManager.RegisteWorker(TClientBusinessPurchaseOrder);
+  gBusinessWorkerManager.RegisteWorker(TClientBusinessWechat);
   gBusinessWorkerManager.RegisteWorker(TClientBusinessDuanDao);
 end.

@@ -71,7 +71,7 @@ const
   {*数据库标识*}
   sFlag_DB_K3         = 'King_K3';                   //金蝶数据库
   sFlag_DB_NC         = 'YonYou_NC';                 //用友数据库
-  sFlag_DB_A3         = 'XZD_A3';                    //新中大数据库
+  sFlag_BakDB         = 'BakDB';                     //备用数据库
 
   {*相关标记*}
   sFlag_Yes           = 'Y';                         //是
@@ -92,7 +92,6 @@ const
   sFlag_Sale          = 'S';                         //销售
   sFlag_Returns       = 'R';                         //退货
   sFlag_Other         = 'O';                         //其它
-  sFlag_DuanDao       = 'D';                         //短倒(First=>Second)
   
   sFlag_TiHuo         = 'T';                         //自提
   sFlag_SongH         = 'S';                         //送货
@@ -143,13 +142,13 @@ const
   sFlag_TJNone        = 'N';                         //未调价
   sFlag_TJing         = 'T';                         //调价中
   sFlag_TJOver        = 'O';                         //调价完成
-  
+
   sFlag_PoundBZ       = 'B';                         //标准
   sFlag_PoundPZ       = 'Z';                         //皮重
   sFlag_PoundPD       = 'P';                         //配对
   sFlag_PoundCC       = 'C';                         //出厂(过磅模式)
   sFlag_PoundLS       = 'L';                         //临时
-  
+
   sFlag_MoneyHuiKuan  = 'R';                         //回款入金
   sFlag_MoneyJiaCha   = 'C';                         //补缴价差
   sFlag_MoneyZhiKa    = 'Z';                         //纸卡回款
@@ -164,7 +163,10 @@ const
   sFlag_ManualA       = 'A';                         //皮重预警(错误事件类型)
   sFlag_ManualB       = 'B';                         //皮重超出范围
   sFlag_ManualC       = 'C';                         //净重超出误差范围
+  sFlag_ManualD       = 'D';                         //空车出厂
+  sFlag_ManualE       = 'E';                         //车牌识别
 
+  sFlag_FactoryID     = 'FactoryID';                 //工厂编号
   sFlag_SysParam      = 'SysParam';                  //系统参数
   sFlag_EnableBakdb   = 'Uses_BackDB';               //备用库
   sFlag_ValidDate     = 'SysValidDate';              //有效期
@@ -174,11 +176,16 @@ const
   sFlag_ViaBillCard   = 'ViaBillCard';               //直接制卡
   sFlag_PayCredit     = 'Pay_Credit';                //回款冲信用
   sFlag_CreditVerify  = 'CreditVerify';              //信用审核
+  sFlag_SettleValid   = 'SettleValid';               //结算有效期
   sFlag_HYValue       = 'HYMaxValue';                //化验批次量
   sFlag_SaleManDept   = 'SaleManDepartment';         //业务员部门编号
   sFlag_VerifyFQValue = 'VerifyFQValue';             //禁止封签号超发
   sFlag_VerifyTruckP  = 'VerifyTruckP';              //校验预置皮重
-  
+
+  sFlag_WXFactory     = 'WXFactoryID';               //微信标识
+  sFlag_WXServiceMIT  = 'WXServiceMIT';              //微信工厂服务
+  sFlag_WXSrvRemote   = 'WXServiceRemote';           //微信远程服务
+
   sFlag_PDaiWuChaZ    = 'PoundDaiWuChaZ';            //袋装正误差
   sFlag_PDaiWuChaF    = 'PoundDaiWuChaF';            //袋装负误差
   sFlag_PDaiPercent   = 'PoundDaiPercent';           //按比例计算误差
@@ -188,9 +195,7 @@ const
   sFlag_PoundIfDai    = 'PoundIFDai';                //袋装是否过磅
   sFlag_NFStock       = 'NoFaHuoStock';              //现场无需发货
   sFlag_StrictSanVal  = 'StrictSanVal';              //严格控制散装超发
-
   sFlag_PEmpTWuCha    = 'EmpTruckWuCha';             //空车出厂误差
-  sFlag_MonitorType   = 'MonitorType';               //磅房监装模式
 
   sFlag_CommonItem    = 'CommonItem';                //公共信息
   sFlag_CardItem      = 'CardItem';                  //磁卡信息项
@@ -206,17 +211,17 @@ const
   sFlag_ZhiKaItem     = 'ZhiKaItem';                 //纸卡信息项
   sFlag_BillItem      = 'BillItem';                  //提单信息项
   sFlag_TruckQueue    = 'TruckQueue';                //车辆队列
-                                                               
+
   sFlag_PaymentItem   = 'PaymentItem';               //付款方式信息项
   sFlag_PaymentItem2  = 'PaymentItem2';              //销售回款信息项
   sFlag_LadingItem    = 'LadingItem';                //提货方式信息项
+  sFlag_OrderItem     = 'OrderItem';                 //采购订单信息项
 
   sFlag_ProviderItem  = 'ProviderItem';              //供应商信息项
   sFlag_MaterailsItem = 'MaterailsItem';             //原材料信息项
 
   sFlag_HardSrvURL    = 'HardMonURL';
   sFlag_MITSrvURL     = 'MITServiceURL';             //服务地址
-  sFlag_Factoryid     = 'FactoryId';                 //工厂ID，与微信平台交互数据时使用  
 
   sFlag_AutoIn        = 'Truck_AutoIn';              //自动进厂
   sFlag_AutoOut       = 'Truck_AutoOut';             //自动出厂
@@ -228,13 +233,16 @@ const
   sFlag_PoundQueue    = 'PoundQueue';                //延迟排队(厂内依据过皮时间)
   sFlag_NetPlayVoice  = 'NetPlayVoice';              //使用网络语音播发
   sFlag_BatchAuto     = 'BatchAuto';                 //使用自动批次号
+  sFlag_FobiddenInMul = 'FobiddenInMul';             //禁止多次进厂
 
   sFlag_BusGroup      = 'BusFunction';               //业务编码组
   sFlag_BillNo        = 'Bus_Bill';                  //交货单号
   sFlag_PoundID       = 'Bus_Pound';                 //称重记录
   sFlag_Customer      = 'Bus_Customer';              //客户编号
   sFlag_SaleMan       = 'Bus_SaleMan';               //业务员编号
+  sFlag_Contract      = 'Bus_Contract';              //合同编号
   sFlag_ZhiKa         = 'Bus_ZhiKa';                 //纸卡编号
+  sFlag_InvWeek       = 'Bus_InvoiceWeek';           //结算周期
   sFlag_WeiXin        = 'Bus_WeiXin';                //微信映射编号
   sFlag_HYDan         = 'Bus_HYDan';                 //化验单号
   sFlag_ForceHint     = 'Bus_HintMsg';               //强制提示
@@ -246,24 +254,30 @@ const
   sFlag_DepDaTing     = '大厅';                      //服务大厅
   sFlag_DepJianZhuang = '监装';                      //监装
   sFlag_DepBangFang   = '磅房';                      //磅房
+  sFlag_DepHuaYan     = '化验室';                    //化验室
 
   sFlag_Solution_YN   = 'Y=通过;N=禁止';
   sFlag_Solution_YNI  = 'Y=通过;N=禁止;I=忽略';
-  
+  sFlag_Solution_OK   = 'O=知道了';
+
   sFlag_LSStock       = 'ls-sn-00';                  //零售水泥编号(预开)
   sFlag_LSCustomer    = 'ls-kh-00';                  //零售客户编号(预开)
 
+  sFlag_WxItem        = 'WxItem';                    //微信相关
+  sFlag_InOutBegin    = 'BeginTime';                 //进出厂查询起始时间
+  sFlag_InOutEnd      = 'EndTime';                   //进出厂查询结束时间
+
+  sFlag_DuanDao       = 'D';                         //短倒(First=>Second)
+  sFlag_Transfer      = 'Bus_Transfer';              //短倒单号
   sFlag_TransBase     = 'Bus_TransBase';             //短倒申请单号
   sFlag_TransferPound = 'TransferPound';             //短倒是否过磅
-  sFlag_Transfer      = 'Bus_Transfer';              //短倒单号
 
-  sFlag_WebOrderStatus_ZK    =0;                     //制卡
-  sFlag_WebOrderStatus_OT    =1;                     //出厂
-  sFlag_WebOrderStatus_DL    =2;                     //删除
-
-  sFlag_MsgType_ZK           =1;                     //开卡
-  sFlag_MsgType_OT           =2;                     //出厂
-  sFlag_MsgType_DL           =4;                     //删除
+  //gAPIUrl           = 'http://123.160.95.29:8888/dlapi/public/index.php/';  //接口地址
+  gAPIUrl             = 'http://192.168.39.2:8888/dlapi/public/index.php/';  //接口地址
+  sFlag_GetCusOrProd  = 'queryPartner';              //客户或者供应商
+  sFlag_GetReceive    = 'queryReceive';              //总应收，即所有客户信息
+  //sFlag_CusTypeCode   = '01';                        //客户
+  //sFlag_PordTypeCode  = '00';                        //供应商
 
   {*数据表*}
   sTable_Group        = 'Sys_Group';                 //用户组
@@ -281,6 +295,7 @@ const
   sTable_SerialBase   = 'Sys_SerialBase';            //编码种子
   sTable_SerialStatus = 'Sys_SerialStatus';          //编号状态
   sTable_WorkePC      = 'Sys_WorkePC';               //验证授权
+  sTable_Factorys     = 'Sys_Factorys';              //工厂列表
   sTable_ManualEvent  = 'Sys_ManualEvent';           //人工干预
   
   sTable_Customer     = 'S_Customer';                //客户信息
@@ -290,6 +305,7 @@ const
 
   sTable_ZhiKa        = 'S_ZhiKa';                   //纸卡数据
   sTable_ZhiKaDtl     = 'S_ZhiKaDtl';                //纸卡明细
+  sTable_PriceRule    = 'S_PriceRule';               //价格规则
   sTable_Card         = 'S_Card';                    //销售磁卡
   sTable_Bill         = 'S_Bill';                    //提货单
   sTable_BillBak      = 'S_BillBak';                 //已删交货单
@@ -305,6 +321,7 @@ const
   sTable_Truck        = 'S_Truck';                   //车辆表
   sTable_ZTLines      = 'S_ZTLines';                 //装车道
   sTable_ZTTrucks     = 'S_ZTTrucks';                //车辆队列
+  sTable_AuditTruck   = 'S_AuditTruck';                //车辆审核
 
   sTable_Provider     = 'P_Provider';                //客户表
   sTable_Materails    = 'P_Materails';               //物料表
@@ -325,11 +342,13 @@ const
   sTable_InvoiceWeek  = 'Sys_InvoiceWeek';           //结算周期
   sTable_InvoiceReq   = 'Sys_InvoiceRequst';         //结算申请
   sTable_InvReqtemp   = 'Sys_InvoiceReqtemp';        //临时申请
+  sTable_InvSettle    = 'Sys_InvoiceSettle';         //销售结算
   sTable_DataTemp     = 'Sys_DataTemp';              //临时数据
 
   sTable_WeixinLog    = 'Sys_WeixinLog';             //微信日志
   sTable_WeixinMatch  = 'Sys_WeixinMatch';           //账号匹配
   sTable_WeixinTemp   = 'Sys_WeixinTemplate';        //信息模板
+  sTable_WebOrderMatch   = 'S_WebOrderMatch';        //商城订单映射
 
   sTable_PoundLog     = 'Sys_PoundLog';              //过磅数据
   sTable_PoundBak     = 'Sys_PoundBak';              //过磅作废
@@ -340,30 +359,12 @@ const
   sTable_K3_Customer  = 'T_Organization';            //组织结构(客户)
   sTable_K3_SalePlan  = 'S_K3_SalePlan';             //销售计划
 
-  sTable_TransBase    = 'P_TransBase';                //短倒单
-  sTable_TransBaseBak = 'P_TransBaseBak';             //短倒单
+  sTable_TransBase    = 'P_TransBase';               //短倒单
+  sTable_TransBaseBak = 'P_TransBaseBak';            //短倒单
   sTable_Transfer     = 'P_Transfer';                //短倒明细单
-  sTable_TransferBak  = 'P_TransferBak';             //短倒明细单  
-
-  sTable_A3_Customer  = 'fg_customfile';            //组织结构(客户) 新中大
-  sTable_A3_Provider  = 'fg_supplyfile';            //组织结构(客户) 新中大
-  sTable_WebOrderMatch   = 'S_WebOrderMatch';        //商城订单映射
-
-  sFlag_Solution_YNP  = 'Y=通过;P=回空;N=禁止';
+  sTable_TransferBak  = 'P_TransferBak';             //短倒明细单
 
   {*新建表*}
-  
-  sSQL_NewWebOrderMatch = 'Create Table $Table(R_ID $Inc,'
-      +'WOM_WebOrderID varchar(32) null,'
-      +'WOM_LID varchar(20) null,'
-      +'WOM_deleted char(1) default ''N'')';
-  {-----------------------------------------------------------------------------
-   商城订单与提货单对照表: WebOrderMatch
-   *.R_ID: 记录编号
-   *.WOM_WebOrderID: 商城订单
-   *.WOM_LID: 提货单
-  -----------------------------------------------------------------------------}
-
   sSQL_NewSysDict = 'Create Table $Table(D_ID $Inc, D_Name varChar(15),' +
        'D_Desc varChar(30), D_Value varChar(50), D_Memo varChar(20),' +
        'D_ParamA $Float, D_ParamB varChar(50), D_ParamC varChar(50),' +
@@ -474,6 +475,23 @@ const
    *.W_Valid: 有效(Y/N)
   -----------------------------------------------------------------------------}
 
+  sSQL_NewFactorys = 'Create Table $Table(R_ID $Inc, F_ID varChar(32),' +
+       'F_Name varChar(100), F_MITUrl varChar(128), F_HardUrl varChar(128),' +
+       'F_WechatUrl varChar(128), F_DBConn varChar(500),' +
+       'F_Valid Char(1), F_Index Integer)';
+  {-----------------------------------------------------------------------------
+   工厂列表: Factorys
+   *.R_ID: 编号
+   *.F_ID: 工厂编号
+   *.F_Name: 工厂名称
+   *.F_MITUrl: 中间件地址
+   *.F_HardUrl: 硬件守护地址
+   *.F_WechatUrl: 微信服务地址
+   *.F_DBConn: 数据库连接配置
+   *.F_Valid: 有效(Y/N)
+   *.F_Index: 加载顺序
+  -----------------------------------------------------------------------------}
+
   sSQL_NewManualEvent = 'Create Table $Table(R_ID $Inc, E_ID varChar(32),' +
        'E_From varChar(32), E_Key varChar(32), E_Event varChar(200), ' +
        'E_Solution varChar(100), E_Result varChar(12),E_Departmen varChar(32),' +
@@ -522,7 +540,7 @@ const
   
   sSQL_NewSalesMan = 'Create Table $Table(R_ID $Inc, S_ID varChar(15),' +
        'S_Name varChar(30), S_PY varChar(30), S_Phone varChar(20),' +
-       'S_Area varChar(50), S_InValid Char(1), S_Memo varChar(50), S_DepNo varchar(10))';
+       'S_Area varChar(50), S_InValid Char(1), S_Memo varChar(50))';
   {-----------------------------------------------------------------------------
    业务员表: SalesMan
    *.R_ID: 记录号
@@ -533,21 +551,26 @@ const
    *.S_Area:所在区域
    *.S_InValid: 已无效
    *.S_Memo: 备注
-   *.S_DepNo: 部门
   -----------------------------------------------------------------------------}
 
-  sSQL_NewCustomer = 'Create Table $Table(R_ID $Inc, C_ID varChar(20), ' +
+  sSQL_NewCustomer = 'Create Table $Table(R_ID $Inc, C_ID varChar(15), ' +
        'C_Name varChar(80), C_PY varChar(80), C_Addr varChar(100), ' +
+       'C_NCID varchar(30),C_NCName varchar(80),C_JxsID varchar(30),'+
+       'C_JxsName varchar(80),'+
        'C_FaRen varChar(50), C_LiXiRen varChar(50), C_WeiXin varChar(15),' +
        'C_Phone varChar(15), C_Fax varChar(15), C_Tax varChar(32),' +
        'C_Bank varChar(35), C_Account varChar(18), C_SaleMan varChar(15),' +
-       'C_Param varChar(32), C_Memo varChar(50), C_XuNi Char(1))';
+       'C_Param varChar(32), C_Memo varChar(50), C_XuNi Char(1),'+
+       'C_FromNC varChar(1))';
   {-----------------------------------------------------------------------------
    客户信息表: Customer
    *.R_ID: 记录号
    *.C_ID: 编号
    *.C_Name: 名称
    *.C_PY: 拼音简写
+   *.C_NCID：用友ID
+   *.C_NCName用友name
+   *.C_JxsID C_JxsName 用友经销商ID Name
    *.C_Addr: 地址
    *.C_FaRen: 法人
    *.C_LiXiRen: 联系人
@@ -561,15 +584,17 @@ const
    *.C_Param: 备用参数
    *.C_Memo: 备注信息
    *.C_XuNi: 虚拟(临时)客户
+   *.C_FromNC: Y是从用友同步
   -----------------------------------------------------------------------------}
   
-  sSQL_NewCusAccount = 'Create Table $Table(R_ID $Inc, A_CID varChar(20),' +
+  sSQL_NewCusAccount = 'Create Table $Table(R_ID $Inc, A_CID varChar(15),' +
        'A_Used Char(1), A_InMoney Decimal(15,5) Default 0,' +
        'A_OutMoney Decimal(15,5) Default 0, A_DebtMoney Decimal(15,5) Default 0,' +
        'A_Compensation Decimal(15,5) Default 0,' +
        'A_InitMoney Decimal(15,5) Default 0,' +
        'A_FreezeMoney Decimal(15,5) Default 0,' +
-       'A_CreditLimit Decimal(15,5) Default 0, A_Date DateTime)';
+       'A_CreditLimit Decimal(15,5) Default 0, A_Date DateTime,'+
+       'A_FromNC varChar(1))';
   {-----------------------------------------------------------------------------
    客户账户:CustomerAccount
    *.R_ID:记录编号
@@ -592,13 +617,14 @@ const
      A_Compensation:由于差价退还给客户的金额
      A_FreezeMoney:已办纸卡但未进厂提货的金额
      A_CreditLimit:授信给用户的最高可欠款金额
+     A_FromNC :Y是从NC系统同步的，N是本地
 
      可用余额 = 期初 + 入金 + 信用额 - 出金 - 补偿金 - 已冻结
      消费总额 = 出金 + 欠款 + 已冻结
   -----------------------------------------------------------------------------}
 
   sSQL_NewInOutMoney = 'Create Table $Table(R_ID $Inc, M_SaleMan varChar(15),' +
-       'M_CusID varChar(20), M_CusName varChar(80), ' +
+       'M_CusID varChar(15), M_CusName varChar(80), ' +
        'M_Type Char(1), M_Payment varChar(20),' +
        'M_Money Decimal(15,5), M_ZID varChar(15), M_Date DateTime,' +
        'M_Man varChar(32), M_Memo varChar(200))';
@@ -637,7 +663,7 @@ const
    *.S_Memo:备注
   -----------------------------------------------------------------------------}
 
-  sSQL_NewCusCredit = 'Create Table $Table(R_ID $Inc ,C_CusID varChar(20),' +
+  sSQL_NewCusCredit = 'Create Table $Table(R_ID $Inc ,C_CusID varChar(15),' +
        'C_Money Decimal(15,5), C_Man varChar(32), C_Date DateTime, ' +
        'C_End DateTime, C_Verify Char(1) Default ''N'', C_VerMan varChar(32),' +
        'C_VerDate DateTime, C_Memo varChar(50))';
@@ -694,13 +720,14 @@ const
 
   sSQL_NewZhiKa = 'Create Table $Table(R_ID $Inc,Z_ID varChar(15),' +
        'Z_Name varChar(100),Z_Card varChar(16),' +
-       'Z_CID varChar(15), Z_Project varChar(100), Z_Customer varChar(20),' +
+       'Z_CID varChar(15), Z_Project varChar(100), Z_Customer varChar(15),' +
        'Z_SaleMan varChar(15), Z_Payment varChar(20), Z_Lading Char(1),' +
        'Z_ValidDays DateTime, Z_Password varChar(16), Z_OnlyPwd Char(1),' +
        'Z_Verified Char(1), Z_InValid Char(1), Z_Freeze Char(1),' +
        'Z_YFMoney $Float, Z_FixedMoney $Float, Z_OnlyMoney Char(1),' +
        'Z_TJStatus Char(1), Z_Memo varChar(200), Z_Man varChar(32),' +
-       'Z_Date DateTime, Z_AreaCode varChar(50))';
+       'Z_Date DateTime, Z_VerifyMan varChar(32), Z_VerifyDate DateTime,'+
+       'Z_AreaCode varChar(50))';
   {-----------------------------------------------------------------------------
    纸卡办理: ZhiKa
    *.R_ID:记录编号
@@ -717,6 +744,8 @@ const
    *.Z_Password: 密码
    *.Z_OnlyPwd: 统一密码
    *.Z_Verified:已审核
+   *.Z_VerifyMan: 审核人
+   *.Z_VerifyDate: 审核时间
    *.Z_InValid:已无效
    *.Z_Freeze:已冻结
    *.Z_YFMoney:预付金额
@@ -725,13 +754,14 @@ const
    *.Z_TJStatus:调价状态
    *.Z_Man:操作人
    *.Z_Date:创建时间
-   *.Z_AreaCode:区域编码
+   *.Z_AreaCode:区域编号
   -----------------------------------------------------------------------------}
 
   sSQL_NewZhiKaDtl = 'Create Table $Table(R_ID $Inc, D_ZID varChar(15),' +
        'D_Type Char(1), D_StockNo varChar(20), D_StockName varChar(80),' +
-       'D_Price $Float, D_Value $Float, D_PPrice $Float, ' +
-       'D_TPrice Char(1) Default ''Y'')';
+       'D_Price $Float, D_Value $Float, ' +
+       'D_FLPrice $Float Default 0, D_YunFei $Float Default 0,' +
+       'D_PPrice $Float, D_TPrice Char(1) Default ''Y'')';
   {-----------------------------------------------------------------------------
    纸卡明细:ZhiKaDtl
    *.R_ID:记录编号
@@ -740,14 +770,30 @@ const
    *.D_StockNo,D_StockName:水泥名称
    *.D_Price:单价
    *.D_Value:办理量
+   *.D_FLPrice: 返利价
+   *.D_YunFei: 运费单价
    *.D_PPrice:调价前单价
    *.D_TPrice:允许调价
+  -----------------------------------------------------------------------------}
+
+  sSQL_NewPriceRule = 'Create Table $Table(R_ID $Inc, R_StockNo varChar(20), ' +
+       'R_StockName varChar(80), R_Low $Float,' +
+       'R_High $Float, R_Valid Char(1), R_Man varChar(32), R_Date DateTime)';
+  {-----------------------------------------------------------------------------
+   价格规则:PriceRule
+   *.R_ID:记录编号
+   *.R_StockNo,R_StockName: 物料
+   *.R_Low: 价格下限
+   *.R_High: 价格上限
+   *.R_Valid: 有效
+   *.R_Man: 办理人
+   *.R_Date: 办理时间
   -----------------------------------------------------------------------------}
 
   sSQL_NewBill = 'Create Table $Table(R_ID $Inc, L_ID varChar(20),' +
        'L_Card varChar(16), L_ZhiKa varChar(15), L_Order varChar(20),' +
        'L_Project varChar(100), L_Area varChar(50),' +
-       'L_CusID varChar(20), L_CusName varChar(80), L_CusPY varChar(80),' +
+       'L_CusID varChar(15), L_CusName varChar(80), L_CusPY varChar(80),' +
        'L_SaleID varChar(15), L_SaleMan varChar(32),' +
        'L_Type Char(1), L_StockNo varChar(20), L_StockName varChar(80),' +
        'L_Value $Float, L_Price $Float, L_ZKMoney Char(1),' +
@@ -761,8 +807,12 @@ const
        'L_OutFact DateTime, L_OutMan varChar(32), L_PrintGLF Char(1),' +
        'L_Lading Char(1), L_IsVIP varChar(1), L_Seal varChar(100),' +
        'L_HYDan varChar(15), L_PrintHY Char(1),' +
-       'L_Man varChar(32), L_Date DateTime,L_EmptyOut char(1) not null default(''N''),' +
-       'L_DelMan varChar(32), L_DelDate DateTime,L_AreaCode varchar(50))';
+       'L_Audit char(1) not null default(''N''),' +
+       'L_EmptyOut char(1) not null default(''N''),' +
+       'L_Man varChar(32), L_Date DateTime,' +
+       'L_DelMan varChar(32), L_DelDate DateTime, L_Memo varChar(320),'+
+       'L_AreaCode varchar(50),L_CusFromNC varchar(1),'+
+       'L_SyncStatus char(1) default ''N'')';
   {-----------------------------------------------------------------------------
    交货单表: Bill
    *.R_ID: 编号
@@ -775,7 +825,7 @@ const
    *.L_SaleID,L_SaleMan:业务员
    *.L_Type: 类型(袋,散)
    *.L_StockNo: 物料编号
-   *.L_StockName: 物料描述 
+   *.L_StockName: 物料描述
    *.L_Value: 提货量
    *.L_Price: 提货单价
    *.L_ZKMoney: 占用纸卡限提(Y/N)
@@ -794,13 +844,16 @@ const
    *.L_Seal: 封签号
    *.L_HYDan: 化验单
    *.L_PrintHY:自动打印化验单
+   *.L_Audit: 补单审核状态Y待审核N已审核
+   *.L_EmptyOut: 空车出厂标记
    *.L_Man:操作人
    *.L_Date:创建时间
    *.L_DelMan: 交货单删除人员
    *.L_DelDate: 交货单删除时间
    *.L_Memo: 动作备注
-   *.L_AreaCode:区域码编号
-   *.L_EmptyOut:空车出厂
+   *.L_AreaCode:区域编号
+   *.L_CusFromNC:客户是否从NC同步 Y是
+   *.L_SyncStatus:同步状态
   -----------------------------------------------------------------------------}
 
   sSQL_NewBillHK = 'Create Table $Table(R_ID $Inc, H_Bill varChar(20),' +
@@ -853,7 +906,8 @@ const
        'O_Type Char(1), O_StockNo varChar(32), O_StockName varChar(80),' +
        'O_Truck varChar(15), O_OStatus Char(1),' +
        'O_Man varChar(32), O_Date DateTime,' +
-       'O_DelMan varChar(32), O_DelDate DateTime, O_Memo varChar(500),O_StockPrc $Float)';
+       'O_KFValue varChar(16), O_KFLS varChar(32),' +
+       'O_DelMan varChar(32), O_DelDate DateTime, O_Memo varChar(500))';
   {-----------------------------------------------------------------------------
    采购订单表: Order
    *.R_ID: 编号
@@ -871,10 +925,11 @@ const
    *.O_Truck: 车船号
    *.O_Man:操作人
    *.O_Date:创建时间
+   *.O_KFValue:矿发数量
+   *.O_KFLS:矿发流水
    *.O_DelMan: 采购单删除人员
    *.O_DelDate: 采购单删除时间
    *.O_Memo: 动作备注
-   *.O_StockPrc: 原材料价格
   -----------------------------------------------------------------------------}
 
   sSQL_NewOrderDtl = 'Create Table $Table(R_ID $Inc, D_ID varChar(20),' +
@@ -889,7 +944,7 @@ const
        'D_MValue $Float, D_MDate DateTime, D_MMan varChar(32),' +
        'D_YTime DateTime, D_YMan varChar(32), ' +
        'D_Value $Float,D_KZValue $Float, D_AKValue $Float,' +
-       'D_YLine varChar(15), D_YLineName varChar(32), ' +
+       'D_YLine varChar(15), D_YLineName varChar(32), D_Unload varChar(80),' +
        'D_DelMan varChar(32), D_DelDate DateTime, D_YSResult Char(1), ' +
        'D_OutFact DateTime, D_OutMan varChar(32), D_Memo varChar(500))';
   {-----------------------------------------------------------------------------
@@ -914,6 +969,7 @@ const
    *.D_YTime,D_YMan: 收货时间,验收人,
    *.D_Value,D_KZValue,D_AKValue: 收货量,验收扣除(明扣),暗扣
    *.D_YLine,D_YLineName: 收货通道
+   *.D_UnLoad: 卸货地点/库房
    *.D_YSResult: 验收结果
    *.D_OutFact,D_OutMan: 出厂放行
   -----------------------------------------------------------------------------}
@@ -945,8 +1001,8 @@ const
        'T_PrePUse Char(1), T_MinPVal $Float, T_MaxPVal $Float, ' +
        'T_PValue $Float Default 0, T_PTime Integer Default 0,' +
        'T_PlateColor varChar(12),T_Type varChar(12), T_LastTime DateTime, ' +
-       'T_Card varChar(32), T_CardUse Char(1), T_NoVerify Char(1),' +
-       'T_Valid Char(1), T_VIPTruck Char(1), T_HasGPS Char(1),T_IDCard varChar(32))';
+       'T_Card varChar(32), T_CardUse Char(1), T_Card2 varChar(32),' +
+       'T_NoVerify Char(1), T_Valid Char(1), T_VIPTruck Char(1), T_HasGPS Char(1))';
   {-----------------------------------------------------------------------------
    车辆信息:Truck
    *.R_ID: 记录号
@@ -972,7 +1028,7 @@ const
    *.T_Valid: 是否有效
    *.T_VIPTruck:是否VIP
    *.T_HasGPS:安装GPS(Y/N)
-   *.T_IDCard: ID卡
+
    有效平均皮重算法:
    T_PValue = (T_PValue * T_PTime + 新皮重) / (T_PTime + 1)
   -----------------------------------------------------------------------------}
@@ -986,8 +1042,8 @@ const
        'P_MValue $Float, P_MDate DateTime, P_MMan varChar(32), ' +
        'P_FactID varChar(32), P_PStation varChar(10), P_MStation varChar(10),' +
        'P_Direction varChar(10), P_PModel varChar(10), P_Status Char(1),' +
-       'P_Valid Char(1), P_PrintNum Integer Default 1,' +
-       'P_DelMan varChar(32), P_DelDate DateTime, P_KZValue $Float)';
+       'P_Valid Char(1), P_PrintNum Integer Default 1, P_KZValue $Float,' +
+       'P_DelMan varChar(32), P_DelDate DateTime, P_Memo varChar(320))';
   {-----------------------------------------------------------------------------
    过磅记录: Materails
    *.P_ID: 编号
@@ -1010,8 +1066,9 @@ const
    *.P_Status: 记录状态
    *.P_Valid: 是否有效
    *.P_PrintNum: 打印次数
-   *.P_DelMan,P_DelDate: 删除记录
    *.P_KZValue: 供应扣杂
+   *.P_DelMan,P_DelDate: 删除记录
+   *.P_Memo: 动作备注
   -----------------------------------------------------------------------------}
 
   sSQL_NewPicture = 'Create Table $Table(R_ID $Inc, P_ID varChar(15),' +
@@ -1091,12 +1148,34 @@ const
    *.T_HKBills: 合卡交货单列表
   -----------------------------------------------------------------------------}
 
+  sSQL_NewAuditTruck = 'Create Table $Table(R_ID $Inc, A_ID varChar(50),' +
+       'A_Serial varChar(50), A_Truck varChar(20), A_License Image,' +
+       'A_WeiXin varChar(20), A_Phone varChar(20), A_LicensePath varChar(150), ' +
+       'A_Date DateTime, A_Status Char(1), ' +
+       'A_PValue $Float, A_Man varChar(20), A_Memo varChar(200))';
+  {-----------------------------------------------------------------------------
+   车辆审核: AuditTruck
+   *.R_ID: 记录号
+   *.A_ID: 车辆唯一识别码
+   *.A_Serial: 车辆类型
+   *.A_Truck: 车牌号
+   *.A_License: 驾驶证图片
+   *.A_WeiXin: 提交信息的商城账户
+   *.A_Phone: 商城账户电话
+   *.A_LicensePath: 照片路径
+   *.A_Date: 审核时间
+   *.A_Status: 审核结果(0:申请中.1:通过.2:驳回)
+   *.A_PValue: 车辆皮重
+   *.A_Man: 审核人
+   *.A_Memo: 动作备注
+  -----------------------------------------------------------------------------}
+
   sSQL_NewDataTemp = 'Create Table $Table(T_SysID varChar(15))';
   {-----------------------------------------------------------------------------
    临时数据表: DataTemp
    *.T_SysID: 系统编号
   -----------------------------------------------------------------------------}
-  
+
   sSQL_NewInvoiceWeek = 'Create Table $Table(W_ID $Inc, W_NO varChar(15),' +
        'W_Name varChar(50), W_Begin DateTime, W_End DateTime,' +
        'W_Man varChar(32), W_Date DateTime, W_Memo varChar(50))';
@@ -1113,7 +1192,7 @@ const
   -----------------------------------------------------------------------------}
   
   sSQL_NewInvoice = 'Create Table $Table(I_ID varChar(25) PRIMARY KEY,' +
-       'I_Week varChar(15), I_CusID varChar(20), I_Customer varChar(80),' +
+       'I_Week varChar(15), I_CusID varChar(15), I_Customer varChar(80),' +
        'I_SaleID varChar(15), I_SaleMan varChar(50), I_Status Char(1),' +
        'I_Flag Char(1), I_InMan varChar(32), I_InDate DateTime,' +
        'I_OutMan varChar(32), I_OutDate DateTime, I_Memo varChar(50))';
@@ -1152,31 +1231,55 @@ const
   -----------------------------------------------------------------------------}
 
   sSQL_NewInvoiceReq = 'Create Table $Table(R_ID $Inc, R_Week varChar(15),' +
-       'R_CusID varChar(20), R_Customer varChar(80),' +
-       'R_SaleID varChar(15), R_SaleMan varChar(50), R_Type Char(1),' +
-       'R_Stock varChar(30), R_Price $Float, R_Value $Float, ' +
+       'R_ZhiKa varChar(15), R_CusID varChar(15), R_Customer varChar(80),' +
+       'R_CusPY varChar(80), R_SaleID varChar(15), R_SaleMan varChar(50), ' +
+       'R_Type Char(1), R_Stock varChar(20), R_StockName varChar(80), ' +
+       'R_Price $Float, R_Value $Float, R_YunFei $Float,' +
        'R_PreHasK $Float Default 0, R_ReqValue $Float, R_KPrice $Float,' +
        'R_KValue $Float Default 0, R_KOther $Float Default 0,' +
-       'R_Man varChar(32), R_Date DateTime)';
+       'R_KMan varChar(32),R_KDate DateTime,R_Man varChar(32),R_Date DateTime)';
   {-----------------------------------------------------------------------------
    发票结算申请:InvoiceReq
    *.R_ID:记录编号
    *.R_Week:结算周期
+   *.R_ZhiKa: 纸卡编号
    *.R_CusID:客户号
-   *.R_Customer:客户名
+   *.R_Customer,R_CusPY:客户名
    *.R_SaleID:业务员号
    *.R_SaleMan:业务员名
    *.R_Type:水泥类型(D,S)
-   *.R_Stock:水泥名称
+   *.R_Stock,R_StockName:水泥品种
    *.R_Price:单价
    *.R_Value:提货量
+   *.R_YunFei:运费单价
    *.R_PreHasK:之前已开量
    *.R_ReqValue:申请量
    *.R_KPrice:开票单价
    *.R_KValue:申请已完成量
    *.R_KOther:本周申请量之外已开
+   *.R_KMan,R_KDate: 结算人
    *.R_Man:申请人
    *.R_Date:申请时间
+  -----------------------------------------------------------------------------}
+
+  sSQL_NewInvoiceSettle = 'Create Table $Table(R_ID $Inc, S_Week varChar(15),' +
+       'S_Bill varChar(15), S_CusID varChar(15), S_ZhiKa varChar(15),' +
+       'S_Stock varChar(20), S_Value $Float, S_Price $Float, S_YunFei $Float,' +
+       'S_OutFact DateTime, S_Man varChar(32), S_Date DateTime)';
+  {-----------------------------------------------------------------------------
+   结算结算:InvoiceSettle
+   *.R_ID:记录编号
+   *.S_Week: 结算周期
+   *.S_Bill: 交货单号
+   *.S_CusID: 客户编号
+   *.S_ZhiKa: 纸卡编号
+   *.S_Stock: 品种编号
+   *.S_Value: 发货量
+   *.S_Price: 返利单价
+   *.S_YunFei: 运费单价
+   *.S_OutFact: 出厂时间
+   *.S_Man: 结算人
+   *.S_Date: 结算时间
   -----------------------------------------------------------------------------}
 
   sSQL_NewWXLog = 'Create Table $Table(R_ID $Inc, L_UserID varChar(50), ' +
@@ -1227,13 +1330,14 @@ const
 
   sSQL_NewProvider = 'Create Table $Table(R_ID $Inc, P_ID varChar(32),' +
        'P_Name varChar(80),P_PY varChar(80), P_Phone varChar(20),' +
-       'P_Saler varChar(32),P_Memo varChar(50))';
+       'P_Saler varChar(32),p_WechartAccount varchar(32),P_Memo varChar(50))';
   {-----------------------------------------------------------------------------
    供应商: Provider
    *.P_ID: 编号
    *.P_Name: 名称
    *.P_PY: 拼音简写
    *.P_Phone: 联系方式
+   *.p_WechartAccount：商城账号
    *.P_Saler: 业务员
    *.P_Memo: 备注
   -----------------------------------------------------------------------------}
@@ -1241,7 +1345,7 @@ const
   sSQL_NewMaterails = 'Create Table $Table(R_ID $Inc, M_ID varChar(32),' +
        'M_Name varChar(80),M_PY varChar(80),M_Unit varChar(20),M_Price $Float,' +
        'M_PrePValue Char(1), M_PrePTime Integer, M_Memo varChar(50), ' +
-       'M_IsSale Char(1) Default ''N'')';
+       'M_HasLs Char(1) Default ''N'', M_IsSale Char(1) Default ''N'')';
   {-----------------------------------------------------------------------------
    物料表: Materails
    *.M_ID: 编号
@@ -1252,6 +1356,7 @@ const
    *.M_PrePTime: 皮重时长(天)
    *.M_Memo: 备注
    *.M_IsSale: 销售品种
+   *.M_HasLs: 是否生成矿发流水
   -----------------------------------------------------------------------------}
 
   sSQL_NewStockParam = 'Create Table $Table(P_ID varChar(15), P_Stock varChar(30),' +
@@ -1358,7 +1463,7 @@ const
   -----------------------------------------------------------------------------}
 
   sSQL_NewStockHuaYan = 'Create Table $Table(H_ID $Inc, H_No varChar(15),' +
-       'H_Custom varChar(20), H_CusName varChar(80), H_SerialNo varChar(15),' +
+       'H_Custom varChar(15), H_CusName varChar(80), H_SerialNo varChar(15),' +
        'H_Truck varChar(15), H_Value $Float, H_BillDate DateTime,' +
        'H_EachTruck Char(1), H_ReportDate DateTime, H_Reporter varChar(32))';
   {-----------------------------------------------------------------------------
@@ -1434,6 +1539,24 @@ const
    *.$ID:信息标识
   -----------------------------------------------------------------------------}
 
+  sSQL_NewWebOrderMatch = 'Create Table $Table(R_ID $Inc,'
+      +'WOM_WebOrderID varchar(32) null,'
+      +'WOM_LID varchar(20) null,'
+      +'WOM_StatusType Integer,'
+      +'WOM_MsgType Integer,'
+      +'WOM_BillType char(1),'
+      +'WOM_SyncNum Integer default 0,'
+      +'WOM_deleted char(1) default ''N'')';
+  {-----------------------------------------------------------------------------
+   商城订单与提货单对照表: WebOrderMatch
+   *.R_ID: 记录编号
+   *.WOM_WebOrderID: 商城订单
+   *.WOM_LID: 提货单
+   *.WOM_StatusType: 订单状态 0.开卡  1.完成
+   *.WOM_MsgType: 消息类型 开单  出厂  报表 删单
+   *.WOM_SyncNum: 发送次数
+   *.WOM_BillType: 业务类型  采购 销售
+  -----------------------------------------------------------------------------}
   sSQL_NewTransBase = 'Create Table $Table(R_ID $Inc, B_ID varChar(20),' +
        'B_CType Char(1), B_Card varChar(32), B_Truck varChar(15), ' +
        'B_TID varChar(15), B_SrcAddr varChar(160), B_DestAddr varChar(160),' +
@@ -1442,7 +1565,8 @@ const
        'B_MValue $Float, B_MDate DateTime, B_MMan varChar(32),' +
        'B_Status Char(1), B_NextStatus Char(1), B_IsUsed Char(1),' +
        'B_Value $Float, B_Man varChar(32), B_Date DateTime,' +
-       'B_DelMan varChar(32), B_DelDate DateTime, B_Memo varChar(500))';
+       'B_DelMan varChar(32), B_DelDate DateTime, B_Memo varChar(500),'+
+       'B_IsNei char(1) Default ''N'')';
   {-----------------------------------------------------------------------------
    短倒基础表: TransBase
    *.R_ID: 编号
@@ -1462,6 +1586,7 @@ const
    *.B_Value: 收货量
    *.B_Man,B_Date: 单据信息
    *.B_DelMan,B_DelDate: 删除信息
+   *.B_IsNei : 厂内倒料车辆   Y、N
   -----------------------------------------------------------------------------}
 
   sSQL_NewTransfer = 'Create Table $Table(R_ID $Inc, T_ID varChar(20),' +
@@ -1550,17 +1675,6 @@ begin
   if nPost = sFlag_TruckZT   then Result := '袋装栈台' else Result := '厂外';
 end;
 
-//Desc: 业务类型转为可识别内容
-function BusinessToStr(const nBus: string): string;
-begin
-  if nBus = sFlag_Sale       then Result := '销售' else
-  if nBus = sFlag_Provide    then Result := '供应' else
-  if nBus = sFlag_Returns    then Result := '退货' else
-  if nBus = sFlag_DuanDao    then Result := '短倒' else
-  //if nBus = sFlag_WaiXie     then Result := '外协' else
-  if nBus = sFlag_Other      then Result := '其它';
-end;
-
 //------------------------------------------------------------------------------
 //Desc: 添加系统表项
 procedure AddSysTableItem(const nTable,nNewSQL: string);
@@ -1587,6 +1701,7 @@ begin
   AddSysTableItem(sTable_SerialStatus, sSQL_NewSerialStatus);
   AddSysTableItem(sTable_StockMatch, sSQL_NewStockMatch);
   AddSysTableItem(sTable_WorkePC, sSQL_NewWorkePC);
+  AddSysTableItem(sTable_Factorys, sSQL_NewFactorys);
   AddSysTableItem(sTable_ManualEvent, sSQL_NewManualEvent);
 
   AddSysTableItem(sTable_Customer, sSQL_NewCustomer);
@@ -1604,6 +1719,7 @@ begin
   AddSysTableItem(sTable_InvoiceDtl, sSQL_NewInvoiceDtl);
   AddSysTableItem(sTable_InvoiceReq, sSQL_NewInvoiceReq);
   AddSysTableItem(sTable_InvReqtemp, sSQL_NewInvoiceReq);
+  AddSysTableItem(sTable_InvSettle, sSQL_NewInvoiceSettle);
   AddSysTableItem(sTable_DataTemp, sSQL_NewDataTemp);
 
   AddSysTableItem(sTable_WeixinLog, sSQL_NewWXLog);
@@ -1612,6 +1728,7 @@ begin
 
   AddSysTableItem(sTable_ZhiKa, sSQL_NewZhiKa);
   AddSysTableItem(sTable_ZhiKaDtl, sSQL_NewZhiKaDtl);
+  AddSysTableItem(sTable_PriceRule, sSQL_NewPriceRule);
   AddSysTableItem(sTable_Card, sSQL_NewCard);
   AddSysTableItem(sTable_Bill, sSQL_NewBill);
   AddSysTableItem(sTable_BillBak, sSQL_NewBill);
@@ -1639,9 +1756,10 @@ begin
   AddSysTableItem(sTable_OrderDtlBak, sSQL_NewOrderDtl);
   AddSysTableItem(sTable_OrderBase, sSQL_NewOrderBase);
   AddSysTableItem(sTable_OrderBaseBak, sSQL_NewOrderBase);
-  AddSysTableItem(sTable_WebOrderMatch,sSQL_NewWebOrderMatch);
 
   AddSysTableItem(sTable_K3_SalePlan, sSQL_NewK3SalePlan);
+  AddSysTableItem(sTable_WebOrderMatch,sSQL_NewWebOrderMatch);
+  AddSysTableItem(sTable_AuditTruck, sSQL_NewAuditTruck);
 
   //内倒业务表
   AddSysTableItem(sTable_TransBase, sSQL_NewTransBase);
@@ -1661,6 +1779,17 @@ begin
   end;
 
   FreeAndNil(gSysTableList);
+end;
+
+//Desc: 业务类型转为可识别内容
+function BusinessToStr(const nBus: string): string;
+begin
+  if nBus = sFlag_Sale       then Result := '销售' else
+  if nBus = sFlag_Provide    then Result := '供应' else
+  if nBus = sFlag_Returns    then Result := '退货' else
+  if nBus = sFlag_DuanDao    then Result := '短倒' else
+  //if nBus = sFlag_WaiXie     then Result := '外协' else
+  if nBus = sFlag_Other      then Result := '其它';
 end;
 
 initialization

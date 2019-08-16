@@ -1,6 +1,6 @@
 inherited fFormTruckIn: TfFormTruckIn
-  Left = 412
-  Top = 129
+  Left = 291
+  Top = 200
   Width = 486
   Height = 566
   BorderStyle = bsSizeable

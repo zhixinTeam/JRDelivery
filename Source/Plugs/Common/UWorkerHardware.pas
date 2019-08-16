@@ -69,9 +69,14 @@ type
     //计数器业务
     function TruckProbe_IsTunnelOK(var nData: string): Boolean;
     function TruckProbe_TunnelOC(var nData: string): Boolean;
+    function TruckProbe_ShowTxt(var nData: string): Boolean;
     //车辆检测控制器业务
     function OpenDoorByReader(var nData: string): Boolean;
     //通过读卡器打开道闸
+    function ShowLedText(var nData: string): Boolean;
+    //定制放灰调用小屏显示
+    function LineClose(var nData: string): Boolean;
+    //定制放灰
   public
     constructor Create; override;
     destructor destroy; override;
@@ -86,7 +91,7 @@ implementation
 uses
 	{$IFDEF MultiReplay}UMultiJS_Reply, {$ELSE}UMultiJS, {$ENDIF}
   UMgrHardHelper, UMgrCodePrinter, UMgrQueue, UTaskMonitor,
-  UMgrTruckProbe;
+  UMgrTruckProbe, UMgrERelay;
 
 //Date: 2012-3-13
 //Parm: 如参数护具
@@ -246,8 +251,12 @@ begin
 
    cBC_IsTunnelOK           : Result := TruckProbe_IsTunnelOK(nData);
    cBC_TunnelOC             : Result := TruckProbe_TunnelOC(nData);
-
+   cBC_ShowTxt              : Result := TruckProbe_ShowTxt(nData);
+   
    cBC_OpenDoorByReader     : Result := OpenDoorByReader(nData);
+
+   cBC_ShowLedTxt           : Result := ShowLedText(nData);
+   cBC_LineClose            : Result := LineClose(nData);
    //xxxxxx
    else
     begin
@@ -299,9 +308,26 @@ end;
 //Parm: 磅站号[FIn.FData]
 //Desc: 获取指定磅站读卡器上的磁卡号
 function THardwareCommander.PoundCardNo(var nData: string): Boolean;
-var nStr, nReader: string;
+var nStr, nReader, nPoundID: string;
+    nIdx: Integer;
 begin
   Result := True;
+  if FIn.FExtParam = sFlag_Yes then
+  begin
+    FListA.Clear;
+    FListB.Clear;
+    if not SplitStr(FIn.FData, FListA, 0, ',') then Exit;
+
+    for nIdx:=0 to FListA.Count - 1 do
+    begin
+      nPoundID := FListA[nIdx];
+      FListB.Values[nPoundID] := gHardwareHelper.GetPoundCard(nPoundID, FOut.FExtParam);
+    end;
+
+    FOut.FData := FListB.Text;
+    Exit;
+  end;
+
   FOut.FData := gHardwareHelper.GetPoundCard(FIn.FData, nReader);
   if FOut.FData = '' then Exit;
 
@@ -432,16 +458,8 @@ begin
     //固定喷码
   end else
   begin
-    {$IFDEF BatchInHYOfBill}
-    {$IFDEF XzdERP_A3}
-    nPrint := 'L_HYDan,L_AreaCode';
-    {$ELSE }
-    nPrint := 'L_HYDan';
-    {$ENDIF}
-    {$ELSE }
-    nPrint := 'L_Seal';
-    {$ENDIF}
-
+    nPrint := 'L_HYDan,L_Area';
+    
     nStr := 'Select L_ID,%s,L_InTime From %s Where L_ID=''%s''';
     nStr := Format(nStr, [nPrint, sTable_Bill, FIn.FData]);
 
@@ -453,7 +471,6 @@ begin
         nData := Format('交货单[ %s ]已无效.', [FIn.FData]); Exit;
       end;
 
-      {$IFDEF XzdERP_A3}
       //日期 + 批次 + 区域码 + 交货单后三位
       nArea := Trim(Fields[2].AsString);    //区域码
       K := Length(nArea);
@@ -477,13 +494,6 @@ begin
         nCode := nCode + ' ';
 
       nCode := nCode + nA1;
-      {$ENDIF}
-
-      {$IFDEF UseERP_K3}
-      nCode := StringReplace(Fields[0].AsString, 'TH', '', [rfIgnoreCase]);
-      nCode := Fields[1].AsString + '-' +
-               Copy(FIn.FExtParam, Length(FIn.FExtParam) - 1, 2) + '-' + nCode;
-      {$ENDIF}
     end;
   end;
 
@@ -654,7 +664,11 @@ begin
     Exit;
   end;
 
+  {$IFNDEF TruckProberEx}
   if gProberManager.IsTunnelOK(FIn.FData) then
+  {$ELSE}
+  if gProberManager.IsTunnelOKEx(FIn.FData) then
+  {$ENDIF}
        FOut.FData := sFlag_Yes
   else FOut.FData := sFlag_No;
 
@@ -721,6 +735,42 @@ begin
 
   if Trim(nReader) <> '' then
     gHYReaderManager.OpenDoor(Trim(nReader));
+end;
+
+//Date: 2018-02-27
+//Parm: 通道号[FIn.FData] 发送内容[FIn.FExt]
+//Desc: 向指定通道的显示屏发送内容
+function THardwareCommander.TruckProbe_ShowTxt(var nData: string): Boolean;
+begin
+  Result := True;
+  if not Assigned(gProberManager) then Exit;
+
+  gProberManager.ShowTxt(FIn.FData,FIn.FExtParam);
+
+  nData := Format('ShowTxt -> %s:%s', [FIn.FData, FIn.FExtParam]);
+  WriteLog(nData);
+end;
+
+function THardwareCommander.ShowLedText(var nData: string): Boolean;
+var
+  nTunnel, nStr:string;
+begin
+  nTunnel := FIn.FData;
+  nStr := fin.FExtParam;
+  gERelayManager.ShowTxt(nTunnel, nStr);
+  Result := True;
+end;
+
+function THardwareCommander.LineClose(var nData: string): Boolean;
+var
+  nTunnel:string;
+begin
+  nTunnel := FIn.FData;
+  if FIn.FExtParam = sFlag_No then
+    gERelayManager.LineOpen(nTunnel)
+  else
+    gERelayManager.LineClose(nTunnel);
+  Result := True;
 end;
 
 initialization

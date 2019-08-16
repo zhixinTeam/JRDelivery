@@ -13,11 +13,10 @@ uses
   Windows, Forms, Classes, SysUtils, ULibFun, UBusinessWorker, UBusinessPacker,
   UTaskMonitor, UBaseObject, USysShareMem, USysLoger, UMITConst, UMITPacker,
   {$IFDEF HardMon}UEventHardware, UWorkerHardware,{$ENDIF}
-  UWorkerClientWebChat,UMgrWechatMsg,
   UWorkerBusiness, UWorkerBusinessBill, UWorkerBusinessOrder,
   {$IFDEF MicroMsg}UMgrRemoteWXMsg,{$ENDIF} UMemDataPool,
   UMgrDBConn, UMgrParam, UMgrPlug, UMgrChannel, UChannelChooser,
-   USAPConnection, UWorkerBusinessDuanDao;
+  USAPConnection, UWorkerBusinessDuanDao;
 
 procedure InitSystemObject(const nMainForm: THandle);
 procedure RunSystemObject;

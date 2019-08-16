@@ -36,8 +36,8 @@ uses
   SysUtils, USysLoger, UHardBusiness, UMgrTruckProbe, UMgrParam,
   UMgrQueue, UMgrLEDCard, UMgrHardHelper, UMgrRemotePrint, U02NReader,
   {$IFDEF MultiReplay}UMultiJS_Reply, {$ELSE}UMultiJS, {$ENDIF}
-  UMgrERelay, UMgrRemoteVoice, UMgrCodePrinter, UMgrLEDDisp,
-  UMgrRFID102, UMgrVoiceNet, UBlueReader,UMgrWechatMsg, UMgrTTCEM100;
+  UMgrERelay, UMgrRemoteVoice, UMgrCodePrinter, UMgrTTCEM100,
+  UMgrRFID102, UMgrVoiceNet, UBlueReader, UMgrSendCardNo;
 
 class function THardwareWorker.ModuleInfo: TPlugModuleInfo;
 begin
@@ -90,13 +90,10 @@ begin
       if not Assigned(gNetVoiceHelper) then
         gNetVoiceHelper := TNetVoiceManager.Create;
       gNetVoiceHelper.LoadConfig(nCfg + 'NetVoice.xml');
-    end;     
+    end;
 
     nStr := '喷码机';
     gCodePrinterManager.LoadConfig(nCfg + 'CodePrinter.xml');
-
-    nStr := '小屏显示';
-    gDisplayManager.LoadConfig(nCfg + 'LEDDisp.xml');
 
     {$IFDEF HYRFID201}
     nStr := '华益RFID102';
@@ -107,7 +104,7 @@ begin
     end;
     {$ENDIF}
 
-    {$IFDEF M100Reader}
+    {$IFDEF TTCEM100}
     nStr := '三合一读卡器';
     if not Assigned(gM100ReaderManager) then
     begin
@@ -116,19 +113,17 @@ begin
     end;
     {$ENDIF}
 
-    nStr := '车辆检测器';    
+    nStr := '车辆检测器';
     if FileExists(nCfg + 'TruckProber.xml') then
     begin
       gProberManager := TProberManager.Create;
       gProberManager.LoadConfig(nCfg + 'TruckProber.xml');
-    end; 
+    end;
 
-    nStr := '微信消息服务';
-    if FileExists(nCfg + 'WeChat.xml') then
-    begin
-      gWechatMsgManager := TWechatMsgManager.Create;
-      gWechatMsgManager.LoadConfig(nCfg + 'WeChat.xml');
-    end; 
+    {$IFDEF FixLoad}
+    nStr := '定置装车';
+    gSendCardNo.LoadConfig(nCfg + 'PLCController.xml');
+    {$ENDIF}
   except
     on E:Exception do
     begin
@@ -168,6 +163,10 @@ begin
 
   gHardShareData := WhenBusinessMITSharedDataIn;
   //hard monitor share
+
+  {$IFDEF FixLoad}
+  gSendCardNo := TReaderHelper.Create;
+  {$ENDIF}
 end;
 
 procedure THardwareWorker.BeforeStartServer;
@@ -191,19 +190,9 @@ begin
   end;
   {$ENDIF}
 
-  {$IFDEF M100Reader}
-  if Assigned(gM100ReaderManager) then
-  begin
-    gM100ReaderManager.OnCardProc := WhenTTCE_M100_ReadCard;
-    gM100ReaderManager.StartReader;
-  end;
-  //三合一读卡器
-  {$ENDIF}
-
   g02NReader.OnCardIn := WhenReaderCardIn;
   g02NReader.OnCardOut := WhenReaderCardOut;
   g02NReader.StartReader;
-
   //near reader
 
   gMultiJSManager.SaveDataProc := WhenSaveJS;
@@ -224,16 +213,24 @@ begin
 
   gCardManager.StartSender;
   //led display
-  gDisplayManager.StartDisplay;
-  //small led
 
+  {$IFDEF MITTruckProber}
   gProberManager.StartProber;
-  //truck
+  {$ENDIF} //truck
 
-  if Assigned(gWechatMsgManager) then
+  {$IFDEF TTCEM100}
+  if Assigned(gM100ReaderManager) then
   begin
-    gWechatMsgManager.StartService;
-  end;
+    gM100ReaderManager.OnCardProc := WhenTTCE_M100_ReadCard;
+    gM100ReaderManager.StartReader;
+  end; //三合一读卡器
+  {$ENDIF}
+
+  {$IFDEF FixLoad}
+  if Assigned(gSendCardNo) then
+  gSendCardNo.StartPrinter;
+  //sendcard
+  {$ENDIF}
 end;
 
 procedure THardwareWorker.AfterStopServer;
@@ -244,7 +241,7 @@ begin
   //printer
   if Assigned(gNetVoiceHelper) then
     gNetVoiceHelper.StopVoice;
-  //NetVoice  
+  //NetVoice
 
   gERelayManager.ControlStop;
   //erelay
@@ -271,21 +268,29 @@ begin
   end;
   {$ENDIF}
 
-  gDisplayManager.StopDisplay;
-  //small led
   gCardManager.StopSender;
   //led
 
+  {$IFDEF MITTruckProber}
   gProberManager.StopProber;
-  //truck
+  {$ENDIF} //truck
+
+  {$IFDEF TTCEM100}
+  if Assigned(gM100ReaderManager) then
+  begin
+    gM100ReaderManager.StopReader;
+    gM100ReaderManager.OnCardProc := nil;
+  end; //三合一读卡器
+  {$ENDIF}
 
   gTruckQueueManager.StopQueue;
   //queue
 
-  if Assigned(gWechatMsgManager) then
-  begin
-    gWechatMsgManager.StopService;
-  end;
+  {$IFDEF FixLoad}
+  if Assigned(gSendCardNo) then
+  gSendCardNo.StopPrinter;
+  //sendcard
+  {$ENDIF}
 end;
 
 end.

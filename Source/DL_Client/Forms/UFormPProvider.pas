@@ -4,6 +4,7 @@
 *******************************************************************************}
 unit UFormPProvider;
 
+{$I Link.Inc}
 interface
 
 uses
@@ -60,6 +61,9 @@ type
     //记录号
     procedure InitFormData(const nID: string);
     //载入数据
+    function MakeProID : string;
+    //生成供应商编号
+    function IsRepeatProID(const nID:string):Boolean;
   public
     { Public declarations }
     class function CreateForm(const nPopedom: string = '';
@@ -238,7 +242,7 @@ begin
         nStr := FieldByName('I_Item').AsString + InfoList1.Delimiter +
                 FieldByName('I_Info').AsString;
         InfoList1.Items.Add(nStr);
-        
+
         Next;
       end;
     end;
@@ -291,8 +295,18 @@ begin
   EditID.Text := Trim(EditID.Text);
   if EditID.Text = '' then
   begin
-    EditName.SetFocus;
+    {$IFDEF AutoProId}
+    EditID.Text := MakeProID;
+    {$ELSE}
+    EditID.SetFocus;
     ShowMsg('请填写供应商编号', sHint); Exit;
+    {$ENDIF}
+  end;
+
+  if IsRepeatProID(EditID.Text) then
+  begin
+    EditID.SetFocus;
+    ShowMsg('供应商编号重复,请检查', sHint); Exit;
   end;
 
   EditName.Text := Trim(EditName.Text);
@@ -300,6 +314,23 @@ begin
   begin
     EditName.SetFocus;
     ShowMsg('请填写供应商名称', sHint); Exit;
+  end
+  else
+  begin
+    {$IFDEF InfoOnly}
+    nStr := 'Select Count(*) From %s Where P_Name=''%s''';
+    nStr := Format(nStr, [sTable_Provider, EditName.Text]);
+    //xxxxx
+
+    with FDM.QueryTemp(nStr) do
+    if Fields[0].AsInteger > 0 then
+    begin
+      nStr := '供应商名称[ %s ]重复';
+      nStr := Format(nStr, [EditName.Text]);
+      ShowMsg(nStr, sHint);
+      Exit;
+    end;
+    {$ENDIF}
   end;
 
   nList := nil;
@@ -319,7 +350,7 @@ begin
 
     FreeAndNil(nList);
     FDM.ExecuteSQL(nSQL);
-    
+
     if FRecordID = '' then
     begin
       nID := EditID.Text;
@@ -353,6 +384,41 @@ begin
     nList.Free;
     FDM.ADOConn.RollbackTrans;
     ShowMsg('数据保存失败', '未知原因');
+  end;
+end;
+
+function TfFormProvider.MakeProID : string;
+var
+  nStr:string;
+  nID: Integer;
+begin
+  Result := '';
+  nStr := 'select Max(R_ID) from %s ';
+  nStr := Format(nStr,[sTable_Provider]);
+  with fdm.QueryTemp(nStr) do
+  begin
+    if RecordCount>0 then
+    begin
+      nID := Fields[0].AsInteger + 1;
+      Result := FormatDateTime('YYYYMMDD',Now) + IntToStr(nID);
+    end;
+  end;
+end;
+
+function TfFormProvider.IsRepeatProID(
+  const nID: string): Boolean;
+var
+  nStr:string;
+begin
+  Result := False;
+  nStr := 'select * from %s where P_ID=''%s'' ';
+  nStr := Format(nStr,[sTable_Provider,nID]);
+  with fdm.QueryTemp(nStr) do
+  begin
+    if RecordCount>0 then
+    begin
+      Result := True;
+    end;
   end;
 end;
 

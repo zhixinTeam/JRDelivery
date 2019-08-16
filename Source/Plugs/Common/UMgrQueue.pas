@@ -34,6 +34,7 @@ type
   PTruckItem = ^TTruckItem;
   TTruckItem = record
     FEnable     : Boolean;
+    FCusName    : string;
     FTruck      : string;      //车牌号
     FStockNo    : string;      //物料号
     FStockName  : string;      //品种名
@@ -66,6 +67,7 @@ type
     FDelayQueue : Boolean;     //延时排队(厂内)
     FPoundQueue : Boolean;     //延时排队(厂内依据过皮时间)
     FNetVoice   : Boolean;     //网络播放语音
+    FFobiddenInMul : Boolean;  //禁止多次进厂
   end;
 
   TStockMatchItem = record
@@ -170,6 +172,7 @@ type
     function IsSanQueueClosed: Boolean;
     function IsDelayQueue: Boolean;
     function IsNetPlayVoice: Boolean;
+    function IsFobiddenInMul: Boolean;
     //队列参数
     procedure RefreshParam;
     procedure RefreshTrucks(const nLoadLine: Boolean);
@@ -186,6 +189,8 @@ type
     function GetVoiceTruck(const nSeparator: string;
      const nLocked: Boolean): string;
     //语音车辆
+    function GetVoiceTruckEx(const nSeparator: string;
+      const nLocked: Boolean): string;
     function GetTruckTunnel(const nTruck: string): string;
     //车辆通道
     function TruckReInfactFobidden(const nTruck: string): Boolean;
@@ -370,6 +375,19 @@ begin
   end;
 end;
 
+function TTruckQueueManager.IsFobiddenInMul: Boolean;
+begin
+  Result := False;
+
+  if Assigned(FDBReader) then
+  try
+    FSyncLock.Enter;
+    Result := FDBReader.FParam.FFobiddenInMul;
+  finally
+    FSyncLock.Leave;
+  end;
+end;
+
 //Desc: 添加nSQL语句
 procedure TTruckQueueManager.AddExecuteSQL(const nSQL: string);
 begin
@@ -538,6 +556,53 @@ begin
   end;
 end;
 
+//Date: 2012-8-24
+//Parm: 分隔符;是否锁定
+//Desc: 获取语音播发的车辆列表
+function TTruckQueueManager.GetVoiceTruckEx(const nSeparator: string;
+  const nLocked: Boolean): string;
+var i,nIdx: Integer;
+    nList: TStrings;
+    nLine: PLineItem;
+    nTruck: PTruckItem;
+begin
+  nList := nil;
+  if nLocked then SyncLock.Enter;
+  try
+    Result := '';
+    nList := TStringList.Create;
+
+    for nIdx:=0 to Lines.Count - 1 do
+    begin
+      nLine := Lines[nIdx];
+      for i:=0 to nLine.FTrucks.Count - 1 do
+      begin
+        nTruck := nLine.FTrucks[i];
+
+        if (not nTruck.FInFact) or (IsDelayQueue and (not nTruck.FInLade)) then
+        begin
+          if nList.IndexOf(nTruck.FTruck) < 0 then //一车多单时避免重复
+          begin
+            nList.Add(UpperCase(nTruck.FTruck));
+            Result := Result + nTruck.FTruck  + '(' + nLine.FName + ')'
+                      + nSeparator;
+          end;
+        end;
+      end;
+    end;
+
+    i := Length(Result);
+    if i > 0 then
+    begin
+      nIdx := Length(nSeparator);
+      Result := Copy(Result, 1, i - nIdx);
+    end;
+  finally
+    nList.Free;
+    if nLocked then SyncLock.Leave;
+  end;
+end;
+
 //Date: 2012-9-1
 //Parm: 车牌号
 //Desc: 获取nTruck所在的通道号
@@ -653,6 +718,7 @@ begin
     FDelayQueue := False;
 
     FNetVoice   := False;
+    FFobiddenInMul := False;
   end;
 
   FWaiter := TWaitObject.Create;
@@ -923,6 +989,9 @@ begin
       if CompareText(Fields[1].AsString, sFlag_NetPlayVoice) = 0 then
         FParam.FNetVoice := Fields[0].AsString = sFlag_Yes;
       //NetVoice
+
+      if CompareText(Fields[1].AsString, sFlag_FobiddenInMul) = 0 then
+        FParam.FFobiddenInMul := Fields[0].AsString = sFlag_Yes;
       Next;
     end;
   end;

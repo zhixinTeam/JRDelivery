@@ -132,11 +132,9 @@ function DeleteBill(const nBill: string): Boolean;
 //删除交货单
 function ChangeLadingTruckNo(const nBill,nTruck: string): Boolean;
 //更改提货车辆
-function ChangePrc(const nBill, nPrc: string): Boolean;
-//更改价格
 function BillSaleAdjust(const nBill, nNewZK: string): Boolean;
 //交货单调拨
-function SetBillCard(const nBill,nTruck: string; nVerify: Boolean; nType:string = 'S'): Boolean;
+function SetBillCard(const nBill,nTruck: string; nVerify: Boolean): Boolean;
 //为交货单办理磁卡
 function SaveBillLSCard(const nCard,nTruck: string): Boolean;
 //办理厂内零售磁卡
@@ -156,32 +154,32 @@ procedure LoadBillItemToMC(const nItem: TLadingBillItem; const nMC: TStrings;
  const nDelimiter: string);
 //载入单据信息到列表
 function SaveLadingBills(const nPost: string; const nData: TLadingBillItems;
- const nTunnel: PPTTunnelItem = nil): Boolean;
+ const nTunnel: PPTTunnelItem = nil;const nLogin: Integer = -1): Boolean;
 //保存指定岗位的交货单
 
 function GetTruckPoundItem(const nTruck: string;
  var nPoundData: TLadingBillItems): Boolean;
 //获取指定车辆的已称皮重信息
 function SaveTruckPoundItem(const nTunnel: PPTTunnelItem;
- const nData: TLadingBillItems): Boolean;
+ const nData: TLadingBillItems;const nLogin: Integer = -1): Boolean;
 //保存车辆过磅记录
 function ReadPoundCard(const nTunnel: string; var nReader: string): string;
 //读取指定磅站读头上的卡号
+function ReadPoundCardEx(var nReader: string;
+  const nTunnel: string; nReadOnly: String = ''): string;
+//读取指定磅站读头上的卡号(电子标签)
+function GetTruckRealLabel(const nTruck: string): string;
+//获取车辆绑定的电子标签
 procedure CapturePicture(const nTunnel: PPTTunnelItem; const nList: TStrings);
 //抓拍指定通道
 
 procedure GetPoundAutoWuCha(var nWCValZ,nWCValF: Double; const nVal: Double;
  const nStation: string = '');
 //获取误差范围
-function AddManualEventRecord(const nEID,nKey,nEvent:string;
- const nFrom: string = sFlag_DepBangFang ;
- const nSolution: string = sFlag_Solution_YN;
- const nDepartmen: string = sFlag_DepDaTing;
- const nReset: Boolean = False; const nMemo: string = ''): Boolean;
-//添加待处理事项记录
-function VerifyManualEventRecord(const nEID: string; var nHint: string;
- const nWant: string = sFlag_Yes): Boolean;
-//检查事件是否通过处理
+
+function GetTruckNO(const nTruck: WideString; const nLong: Integer=12): string;
+function GetValue(const nValue: Double): string;
+//显示格式化
 
 function IsTunnelOK(const nTunnel: string): Boolean;
 //查询通道光栅是否正常
@@ -189,6 +187,8 @@ procedure TunnelOC(const nTunnel: string; const nOpen: Boolean);
 //控制通道红绿灯开合
 function PlayNetVoice(const nText,nCard,nContent: string): Boolean;
 //经中间件播发语音
+procedure ProberShowTxt(const nTunnel, nText: string);
+//车检发送小屏
 
 function SaveOrderBase(const nOrderData: string): string;
 //保存采购申请单
@@ -213,7 +213,7 @@ function GetPurchaseOrders(const nCard,nPost: string;
  var nBills: TLadingBillItems): Boolean;
 //获取指定岗位的采购单列表
 function SavePurchaseOrders(const nPost: string; const nData: TLadingBillItems;
- const nTunnel: PPTTunnelItem = nil): Boolean;
+ const nTunnel: PPTTunnelItem = nil;const nLogin: Integer = -1): Boolean;
 //保存指定岗位的采购单
 procedure LoadOrderItemToMC(const nItem: TLadingBillItem; const nMC: TStrings;
  const nDelimiter: string);
@@ -231,7 +231,14 @@ function OpenDoorByReader(const nReader: string; nType: string = 'Y'): Boolean;
 function GetHYMaxValue: Double;
 function GetHYValueByStockNo(const nNo: string): Double;
 //获取化验单已开量
-
+function IsEleCardVaid(const nTruckNo: string): Boolean;
+//验证车辆电子标签
+function IsEleCardVaidEx(const nTruckNo: string): Boolean;
+//验证车辆电子标签
+function IfStockHasLs(const nStockNo: string): Boolean;
+//验证物料是否需要输入流水
+function IFHasOrder(const nTruck: string): Boolean;
+//车辆是否存在未完成采购单
 function IsWeekValid(const nWeek: string; var nHint: string): Boolean;
 //周期是否有效
 function IsWeekHasEnable(const nWeek: string): Boolean;
@@ -253,14 +260,14 @@ function PrintShouJuReport(const nSID: string; const nAsk: Boolean): Boolean;
 //打印收据
 function PrintBillReport(nBill: string; const nAsk: Boolean): Boolean;
 //打印提货单
-function PrintOrderReport(const nOrder: string;  const nAsk: Boolean): Boolean;
+function PrintOrderReport(const nOrder: string;  const nAsk: Boolean;
+                          const nMul: Boolean = False): Boolean;
 //打印采购单
 function PrintRCOrderReport(const nID: string;  const nAsk: Boolean): Boolean;
 //打印采购单
-function PrintPoundReport(const nPound: string; nAsk: Boolean): Boolean;
+function PrintPoundReport(const nPound: string; nAsk: Boolean;
+                          const nMul: Boolean = False): Boolean;
 //打印榜单
-function PrintDuanDaoReport(const nID: string; nAsk: Boolean): Boolean;
-//打印短倒单
 function PrintHuaYanReport(const nHID: string; const nAsk: Boolean): Boolean;
 function PrintHeGeReport(const nHID: string; const nAsk: Boolean): Boolean;
 //化验单,合格证
@@ -277,64 +284,82 @@ function GetFQValueByStockNo(const nStock: string): Double;
 //获取封签号已发量
 function VerifyFQSumValue: Boolean;
 //是否校验封签号
+function AddManualEventRecord(const nEID,nKey,nEvent:string;
+ const nFrom: string = sFlag_DepBangFang ;
+ const nSolution: string = sFlag_Solution_YN;
+ const nDepartmen: string = sFlag_DepDaTing;
+ const nReset: Boolean = False; const nMemo: string = ''): Boolean;
+//添加待处理事项记录
+function VerifyManualEventRecord(const nEID: string; var nHint: string;
+ const nWant: string = sFlag_Yes; const nUpdateHint: Boolean = True): Boolean;
+//检查事件是否通过处理
+
+function getCustomerInfo(const nData: string): string;
+//获取客户注册信息
+function get_Bindfunc(const nData: string): string;
+//客户与微信账号绑定
+function send_event_msg(const nData: string): string;
+//发送消息
+function edit_shopclients(const nData: string): string;
+//新增商城用户
+function edit_shopgoods(const nData: string): string;
+//添加商品
+function get_shoporders(const nData: string): string;
+//获取订单信息
+function complete_shoporders(const nData: string): string;
+//更新订单状态
+function getAuditTruck(const nData: string): string;
+//获取审核车辆
+function UploadAuditTruck(const nData: string): string;
+//审核车辆结果上传
+function DownLoadPic(const nData: string): string;
+//下载照片
+function GetshoporderbyTruck(const nData: string): string;
+//根据车牌号获取订单
+procedure SaveWebOrderDelMsg(const nLID, nBillType: string);
+//插入推送消息
+
+function MakeSaleViewData: Boolean;
+//生成销售特定字段数据(特定使用)
+function MakeOrderViewData: Boolean;
+//生成采购特定字段数据(特定使用)
 
 function SaveDDBases(const nDDData: string): string;
 //保存短倒基本信息
 function DeleteDDBase(const nBase: string): Boolean;
 //删除短倒基本信息
+
 function LogoutDDCard(const nCard: string): Boolean;
 //注销短倒磁卡
+
 function SaveDDCard(const nBID, nCard: string): Boolean;
 //绑定短倒磁卡
 function GetDuanDaoItems(const nCard,nPost: string;
   var nBills: TLadingBillItems): Boolean;
 //获取指定岗位的短倒明细列表
 function SaveDuanDaoItems(const nPost: string; const nData: TLadingBillItems;
- const nTunnel: PPTTunnelItem=nil): Boolean;
+ const nTunnel: PPTTunnelItem=nil;const nLogin: Integer = -1): Boolean;
 //保存指定岗位的短倒明细
 function DeleteDDDetial(const nDID: string): Boolean;
 //删除短倒明细
+function SetDDCard(const nBill,nTruck: string; nVerify: Boolean): Boolean;
+//为交货单办理磁卡
+function PrintDuanDaoReport(const nID: string; nAsk: Boolean): Boolean;
+//打印短倒单
 
-function GetTruckNO(const nTruck: String): string;
-function GetValue(const nValue: Double): string;
+procedure CapturePictureEx(const nTunnel: PPTTunnelItem;
+                         const nLogin: Integer; nList: TStrings);
+//抓拍nTunnel的图像Ex
+function InitCapture(const nTunnel: PPTTunnelItem; var nLogin: Integer): Boolean;
+//初始化抓拍，与CapturePictureEx配套使用
+function FreeCapture(nLogin: Integer): Boolean;
+//释放抓拍
 
-//获取客户注册信息
-function getCustomerInfo(const nXmlStr: string): string;
-
-//客户与微信账号绑定
-function get_Bindfunc(const nXmlStr: string): string;
-
-//发送消息
-function send_event_msg(const nXmlStr: string): string;
-
-//新增商城用户
-function edit_shopclients(const nXmlStr: string): string;
-
-//添加商品
-function edit_shopgoods(const nXmlStr: string): string;
-
-//获取订单信息
-function get_shoporders(const nXmlStr: string): string;
-
-//更新订单状态
-function complete_shoporders(const nXmlStr: string): string;
-
-
+function SyncBillToErp(const nBillID:string):Boolean;
+//同步至用友
+function SyncBillToBakDB(const nBillID:string):Boolean;
+//同步至备用库
 implementation
-
-function GetTruckNO(const nTruck: String): string;
-var nStrTmp: string;
-begin
-  nStrTmp := '      ' + nTruck;
-  Result := Copy(nStrTmp, Length(nStrTmp)-6 + 1, 6) + '      ';
-end;
-
-function GetValue(const nValue: Double): string;
-var nStrTmp: string;
-begin
-  nStrTmp := Format('      %.2f', [nValue]);
-  Result := Copy(nStrTmp, Length(nStrTmp)-6 + 1, 6);
-end;
 
 //Desc: 记录日志
 procedure WriteLog(const nEvent: string);
@@ -374,124 +399,6 @@ begin
   finally
     gBusinessWorkerManager.RelaseWorker(nWorker);
   end;
-end;
-
-//Date: 2014-06-19
-//Parm: 记录标识;车牌号;图片文件
-//Desc: 将nFile存入数据库
-procedure SavePicture(const nID, nTruck, nMate, nFile: string);
-var nStr: string;
-    nRID: Integer;
-begin
-  FDM.ADOConn.BeginTrans;
-  try
-    nStr := MakeSQLByStr([
-            SF('P_ID', nID),
-            SF('P_Name', nTruck),
-            SF('P_Mate', nMate),
-            SF('P_Date', sField_SQLServer_Now, sfVal)
-            ], sTable_Picture, '', True);
-    //xxxxx
-
-    if FDM.ExecuteSQL(nStr) < 1 then Exit;
-    nRID := FDM.GetFieldMax(sTable_Picture, 'R_ID');
-
-    nStr := 'Select P_Picture From %s Where R_ID=%d';
-    nStr := Format(nStr, [sTable_Picture, nRID]);
-    FDM.SaveDBImage(FDM.QueryTemp(nStr), 'P_Picture', nFile);
-
-    FDM.ADOConn.CommitTrans;
-  except
-    FDM.ADOConn.RollbackTrans;
-  end;
-end;
-
-//Date: 2017-09-22
-//Parm: 岗位;短倒单列表;磅站通道
-//Desc: 保存nPost岗位上的短倒单数据
-function SaveDuanDaoItems(const nPost: string; const nData: TLadingBillItems;
- const nTunnel: PPTTunnelItem): Boolean;
-var nStr: string;
-    nIdx: Integer;
-    nList: TStrings;
-    nOut: TWorkerBusinessCommand;
-begin
-  nStr := CombineBillItmes(nData);
-  Result := CallBusinessDuanDao(cBC_SavePostBills, nStr, nPost, @nOut);
-  if (not Result) or (nOut.FData = '') then Exit;
-
-  if Assigned(nTunnel) then //过磅称重
-  begin
-    nList := TStringList.Create;
-    try
-      CapturePicture(nTunnel, nList);
-      //capture file
-
-      for nIdx:=0 to nList.Count - 1 do
-        SavePicture(nOut.FData, nData[0].FTruck,
-                                nData[0].FStockName, nList[nIdx]);
-      //save file
-    finally
-      nList.Free;
-    end;
-  end; 
-end;
-
-//Date: 2017-09-22
-//Parm: 磁卡号;岗位;短倒单列表
-//Desc: 获取nPost岗位上磁卡为nCard的短倒单列表
-function GetDuanDaoItems(const nCard,nPost: string;
-  var nBills: TLadingBillItems): Boolean;
-var nOut: TWorkerBusinessCommand;
-begin
-  Result := CallBusinessDuanDao(cBC_GetPostBills, nCard, nPost, @nOut);
-  if Result then
-    AnalyseBillItems(nOut.FData, nBills);
-  //xxxxx
-end;
-
-//Date: 2019-07-22
-//Parm: 短倒编号,磁卡号
-//Desc: 绑定磁卡nCard
-function SaveDDCard(const nBID, nCard: string): Boolean;
-var nOut: TWorkerBusinessCommand;
-begin
-  Result := CallBusinessDuanDao(cBC_SaveBillCard, nBID, nCard, @nOut);
-end;
-
-//Date: 2017-09-22
-//Parm: 短倒单号
-//Desc: 删除nBillID单据
-function DeleteDDBase(const nBase: string): Boolean;
-var nOut: TWorkerBusinessCommand;
-begin
-  Result := CallBusinessDuanDao(cBC_DeleteBill, nBase, '', @nOut);
-end;
-
-//Date: 2017-09-22
-//Parm: 开短倒数据
-//Desc: 保存短倒单,返回短倒单号列表
-function SaveDDBases(const nDDData: string): string;
-var nOut: TWorkerBusinessCommand;
-begin
-  if CallBusinessDuanDao(cBC_SaveBills, nDDData, '', @nOut) then
-       Result := nOut.FData
-  else Result := '';
-end;
-
-//Date: 2017-09-22
-//Parm: 磁卡号
-//Desc: 注销nCard
-function LogoutDDCard(const nCard: string): Boolean;
-var nOut: TWorkerBusinessCommand;
-begin
-  Result := CallBusinessDuanDao(cBC_LogoffCard, nCard, '', @nOut);
-end;
-
-function DeleteDDDetial(const nDID: string): Boolean;
-var nOut: TWorkerBusinessCommand;
-begin
-  Result := CallBusinessDuanDao(cBC_DeleteOrder, nDID, '', @nOut);
 end;
 
 //------------------------------------------------------------------------------
@@ -682,6 +589,42 @@ begin
   end;
 end;
 
+
+//Date: 2017-10-26
+//Parm: 命令;数据;参数;服务地址;输出
+//Desc: 调用中间件上的销售单据对象
+function CallBusinessWechat(const nCmd: Integer; const nData,nExt,nSrvURL: string;
+  const nOut: PWorkerWebChatData; const nWarn: Boolean = True): Boolean;
+var nIn: TWorkerWebChatData;
+    nWorker: TBusinessWorkerBase;
+begin
+  nWorker := nil;
+  try
+    nIn.FCommand := nCmd;
+    nIn.FData := nData;
+    nIn.FExtParam := nExt;
+    nIn.FRemoteUL := nSrvURL;
+
+    if nWarn then
+         nIn.FBase.FParam := ''
+    else nIn.FBase.FParam := sParam_NoHintOnError;
+
+    if gSysParam.FAutoPound and (not gSysParam.FIsManual) then
+      nIn.FBase.FParam := sParam_NoHintOnError;
+    //close hint param
+    
+    nWorker := gBusinessWorkerManager.LockWorker(sCLI_BusinessWebchat);
+    //get worker
+    Result := nWorker.WorkActive(@nIn, nOut);
+
+    if not Result then
+      WriteLog(nOut.FBase.FErrDesc);
+    //xxxxx
+  finally
+    gBusinessWorkerManager.RelaseWorker(nWorker);
+  end;
+end;
+
 //Date: 2014-09-04
 //Parm: 分组;对象;使用日期编码模式
 //Desc: 依据nGroup.nObject生成串行编号
@@ -762,6 +705,35 @@ begin
 end;
 
 //------------------------------------------------------------------------------
+//Date: 2014-06-19
+//Parm: 记录标识;车牌号;图片文件
+//Desc: 将nFile存入数据库
+procedure SavePicture(const nID, nTruck, nMate, nFile: string);
+var nStr: string;
+    nRID: Integer;
+begin
+  FDM.ADOConn.BeginTrans;
+  try
+    nStr := MakeSQLByStr([
+            SF('P_ID', nID),
+            SF('P_Name', nTruck),
+            SF('P_Mate', nMate),
+            SF('P_Date', sField_SQLServer_Now, sfVal)
+            ], sTable_Picture, '', True);
+    //xxxxx
+
+    if FDM.ExecuteSQL(nStr) < 1 then Exit;
+    nRID := FDM.GetFieldMax(sTable_Picture, 'R_ID');
+
+    nStr := 'Select P_Picture From %s Where R_ID=%d';
+    nStr := Format(nStr, [sTable_Picture, nRID]);
+    FDM.SaveDBImage(FDM.QueryTemp(nStr), 'P_Picture', nFile);
+
+    FDM.ADOConn.CommitTrans;
+  except
+    FDM.ADOConn.RollbackTrans;
+  end;
+end;
 
 //Desc: 构建图片路径
 function MakePicName: string;
@@ -929,7 +901,7 @@ begin
 
   nStr := 'Select * From %s Where E_ID=''%s''';
   nStr := Format(nStr, [sTable_ManualEvent, nEID]);
-  
+
   with FDM.QuerySQL(nStr) do
   if RecordCount > 0 then
   begin
@@ -947,7 +919,7 @@ begin
           SF('E_From', nFrom),
           SF('E_Memo', nMemo),
           SF('E_Result', 'Null', sfVal),
-          
+
           SF('E_Event', nEvent),
           SF('E_Solution', nSolution),
           SF('E_Departmen', nDepartmen),
@@ -963,7 +935,7 @@ end;
 //Parm: 事件ID;预期结果;错误返回
 //Desc: 判断事件是否处理
 function VerifyManualEventRecord(const nEID: string; var nHint: string;
- const nWant: string): Boolean;
+ const nWant: string; const nUpdateHint: Boolean): Boolean;
 var nStr: string;
 begin
   Result := False;
@@ -976,13 +948,15 @@ begin
     nStr := Trim(FieldByName('E_Result').AsString);
     if nStr = '' then
     begin
-      nHint := FieldByName('E_Event').AsString;
+      if nUpdateHint then
+        nHint := FieldByName('E_Event').AsString;
       Exit;
     end;
 
     if nStr <> nWant then
     begin
-      nHint := '请联系管理员，做换票处理';
+      if nUpdateHint then
+        nHint := '请联系管理员，做换票处理';
       Exit;
     end;
 
@@ -1390,7 +1364,7 @@ end;
 //Parm: 称重数据
 //Desc: 保存nData称重数据
 function SaveTruckPoundItem(const nTunnel: PPTTunnelItem;
- const nData: TLadingBillItems): Boolean;
+ const nData: TLadingBillItems;const nLogin: Integer): Boolean;
 var nStr: string;
     nIdx: Integer;
     nList: TStrings;
@@ -1402,8 +1376,12 @@ begin
 
   nList := TStringList.Create;
   try
+    {$IFDEF CapturePictureEx}
+    CapturePictureEx(nTunnel, nLogin, nList);
+    {$ELSE}
     CapturePicture(nTunnel, nList);
     //capture file
+    {$ENDIF}
 
     for nIdx:=0 to nList.Count - 1 do
       SavePicture(nOut.FData, nData[0].FTruck,
@@ -1429,6 +1407,43 @@ begin
     Result := Trim(nOut.FData);
     nReader:= Trim(nOut.FExtParam);
   end;
+end;
+
+//Date: 2018-04-27
+//Parm: 通道号
+//Desc: 读取nTunnel读头上的卡号(电子标签)
+function ReadPoundCardEx(var nReader: string;
+    const nTunnel: string; nReadOnly: String = ''): string;
+var nOut: TWorkerBusinessCommand;
+begin
+  Result := '';
+  nReader:= '';
+  //卡号
+
+  if CallBusinessHardware(cBC_GetPoundCard, nTunnel, nReadOnly, @nOut)  then
+  begin
+    Result := Trim(nOut.FData);
+    nReader:= Trim(nOut.FExtParam);
+  end;
+end;
+
+//Date: 2017/5/18
+//Parm: 车牌号码
+//Desc: 获取车辆在用的电子标签
+function GetTruckRealLabel(const nTruck: string): string;
+var nStr: string;
+begin
+  Result := '';
+  //默认允许
+
+  nStr := 'Select Top 1 T_Card From %s ' +
+          'Where T_Truck=''%s'' And T_CardUse=''%s'' And T_Card Is not NULL';
+  nStr := Format(nStr, [sTable_Truck, nTruck, sFlag_Yes]);
+  //选择该车提一条有电子标签的记录
+
+  with FDM.QueryTemp(nStr) do
+  if RecordCount > 0 then
+    Result := Fields[0].AsString;
 end;
 
 //------------------------------------------------------------------------------
@@ -1703,15 +1718,6 @@ begin
   Result := CallBusinessSaleBill(cBC_ModifyBillTruck, nBill, nTruck, @nOut);
 end;
 
-//Date: 2017-10-16
-//Parm: 交货单;修改提货单价格
-//Desc: 修改nBill的价格为nPrc.
-function ChangePrc(const nBill, nPrc: string): Boolean;
-var nOut: TWorkerBusinessCommand;
-begin
-  Result := CallBusinessSaleBill(cBC_ModifyPrc, nBill, nPrc, @nOut);
-end;
-
 //Date: 2014-09-30
 //Parm: 交货单;纸卡
 //Desc: 将nBill调拨给nNewZK的客户
@@ -1724,7 +1730,7 @@ end;
 //Date: 2014-09-17
 //Parm: 交货单;车牌号;校验制卡开关
 //Desc: 为nBill交货单制卡
-function SetBillCard(const nBill,nTruck: string; nVerify: Boolean; nType:string = 'S'): Boolean;
+function SetBillCard(const nBill,nTruck: string; nVerify: Boolean): Boolean;
 var nStr: string;
     nP: TFormCommandParam;
 begin
@@ -1741,7 +1747,7 @@ begin
 
   nP.FParamA := nBill;
   nP.FParamB := nTruck;
-  nP.FParamC := nType;
+  nP.FParamC := sFlag_Sale;
   CreateBaseFormItem(cFI_FormMakeCard, '', @nP);
   Result := (nP.FCommand = cCmd_ModalResult) and (nP.FParamA = mrOK);
 end;
@@ -1829,14 +1835,13 @@ end;
 //Parm: 岗位;交货单列表;磅站通道
 //Desc: 保存nPost岗位上的交货单数据
 function SaveLadingBills(const nPost: string; const nData: TLadingBillItems;
- const nTunnel: PPTTunnelItem): Boolean;
+ const nTunnel: PPTTunnelItem;const nLogin: Integer): Boolean;
 var nStr: string;
     nIdx: Integer;
     nList: TStrings;
     nOut: TWorkerBusinessCommand;
 begin
   nStr := CombineBillItmes(nData);
-
   Result := CallBusinessSaleBill(cBC_SavePostBills, nStr, nPost, @nOut);
   if (not Result) or (nOut.FData = '') then Exit;
 
@@ -1844,8 +1849,12 @@ begin
   begin
     nList := TStringList.Create;
     try
+      {$IFDEF CapturePictureEx}
+      CapturePictureEx(nTunnel, nLogin, nList);
+      {$ELSE}
       CapturePicture(nTunnel, nList);
       //capture file
+      {$ENDIF}
 
       for nIdx:=0 to nList.Count - 1 do
         SavePicture(nOut.FData, nData[0].FTruck,
@@ -1964,7 +1973,7 @@ end;
 //Parm: 岗位;交货单列表;磅站通道
 //Desc: 保存nPost岗位上的交货单数据
 function SavePurchaseOrders(const nPost: string; const nData: TLadingBillItems;
- const nTunnel: PPTTunnelItem): Boolean;
+ const nTunnel: PPTTunnelItem;const nLogin: Integer): Boolean;
 var nStr: string;
     nIdx: Integer;
     nList: TStrings;
@@ -1978,8 +1987,12 @@ begin
   begin
     nList := TStringList.Create;
     try
+      {$IFDEF CapturePictureEx}
+      CapturePictureEx(nTunnel, nLogin, nList);
+      {$ELSE}
       CapturePicture(nTunnel, nList);
       //capture file
+      {$ENDIF}
 
       for nIdx:=0 to nList.Count - 1 do
         SavePicture(nOut.FData, nData[0].FTruck,
@@ -2326,7 +2339,7 @@ begin
 
   nBill := AdjustListStrFormat(nBill, '''', True, ',', False);
   //添加引号
-  
+
   nStr := 'Select * From %s b Where L_ID In(%s)';
   nStr := Format(nStr, [sTable_Bill, nBill]);
   //xxxxx
@@ -2353,7 +2366,7 @@ begin
   nParam.FValue := gSysParam.FHintText;
   FDR.AddParamItem(nParam);
 
-  FDR.Dataset1.DataSet := FDM.SqlTemp; 
+  FDR.Dataset1.DataSet := FDM.SqlTemp;
   FDR.ShowReport;
   Result := FDR.PrintSuccess;
 end;
@@ -2362,7 +2375,8 @@ end;
 //Date: 2012-4-1
 //Parm: 采购单号;提示;数据对象;打印机
 //Desc: 打印nOrder采购单号
-function PrintOrderReport(const nOrder: string;  const nAsk: Boolean): Boolean;
+function PrintOrderReport(const nOrder: string;  const nAsk: Boolean;
+                          const nMul: Boolean = False): Boolean;
 var nStr: string;
     nDS: TDataSet;
     nParam: TReportParamItem;
@@ -2375,7 +2389,10 @@ begin
     if not QueryDlg(nStr, sAsk) then Exit;
   end;
 
-  nStr := 'Select * From %s oo Inner Join %s od on oo.O_ID=od.D_OID Where D_ID=''%s''';
+  if nMul then
+    nStr := 'Select * From %s oo Inner Join %s od on oo.O_ID=od.D_OID Where D_ID In (%s)'
+  else
+    nStr := 'Select * From %s oo Inner Join %s od on oo.O_ID=od.D_OID Where D_ID=''%s''';
   nStr := Format(nStr, [sTable_Order, sTable_OrderDtl, nOrder]);
 
   nDS := FDM.QueryTemp(nStr);
@@ -2409,9 +2426,10 @@ begin
 end;
 
 //Date: 2012-4-15
-//Parm: 过磅单号;是否询问
+//Parm: 过磅单号;是否询问;是否批量打印
 //Desc: 打印nPound过磅记录
-function PrintPoundReport(const nPound: string; nAsk: Boolean): Boolean;
+function PrintPoundReport(const nPound: string; nAsk: Boolean;
+                          const nMul: Boolean = False): Boolean;
 var nStr: string;
     nParam: TReportParamItem;
 begin
@@ -2422,8 +2440,10 @@ begin
     nStr := '是否要打印过磅单?';
     if not QueryDlg(nStr, sAsk) then Exit;
   end;
-
-  nStr := 'Select * From %s Where P_ID=''%s''';
+  if nMul then
+    nStr := 'Select * From %s Where P_ID In (%s)'
+  else
+    nStr := 'Select * From %s Where P_ID=''%s''';
   nStr := Format(nStr, [sTable_PoundLog, nPound]);
 
   if FDM.QueryTemp(nStr).RecordCount < 1 then
@@ -2458,51 +2478,6 @@ begin
     nStr := Format(nStr, [sTable_PoundLog, nPound]);
     FDM.ExecuteSQL(nStr);
   end;
-end;
-
-//Date: 2017-09-22
-//Parm: 短倒ID;是否打印
-//Desc: 打印短倒明细
-function PrintDuanDaoReport(const nID: string; nAsk: Boolean): Boolean;
-var nStr: string;
-    nParam: TReportParamItem;
-begin
-  Result := False;
-
-  if nAsk then
-  begin
-    nStr := '是否要打印短倒单?';
-    if not QueryDlg(nStr, sAsk) then Exit;
-  end;
-
-  nStr := 'Select * From %s Where T_ID=''%s''';
-  nStr := Format(nStr, [sTable_Transfer, nID]);
-
-  if FDM.QueryTemp(nStr).RecordCount < 1 then
-  begin
-    nStr := '短倒记录[ %s ] 已无效!!';
-    nStr := Format(nStr, [nID]);
-    ShowMsg(nStr, sHint); Exit;
-  end;
-
-  nStr := gPath + sReportDir + 'DuanDao.fr3';
-  if not FDR.LoadReportFile(nStr) then
-  begin
-    nStr := '无法正确加载报表文件';
-    ShowMsg(nStr, sHint); Exit;
-  end;
-
-  nParam.FName := 'UserName';
-  nParam.FValue := gSysParam.FUserID;
-  FDR.AddParamItem(nParam);
-
-  nParam.FName := 'Company';
-  nParam.FValue := gSysParam.FHintText;
-  FDR.AddParamItem(nParam);
-
-  FDR.Dataset1.DataSet := FDM.SqlTemp;
-  FDR.ShowReport;
-  Result := FDR.PrintSuccess;
 end;
 
 //Date: 2017-01-11
@@ -2558,34 +2533,22 @@ end;
 function GetReportFileByStock(const nStock: string): string;
 begin
   Result := GetPinYinOfStr(nStock);
-  {$IFDEF HNJR}
-    if Pos('dj', Result) > 0 then
-      Result := gPath + sReportDir + 'JRHY425DJ.fr3'
-    else if Pos('32', Result) > 0 then
-      Result := gPath + sReportDir + 'JRHY325.fr3'
-    else if Pos('42', Result) > 0 then
-      Result := gPath + sReportDir + 'JRHY425.fr3'
-    else if Pos('52', Result) > 0 then
-      Result := gPath + sReportDir + 'JRHY525.fr3'
-    else Result := '';
-  {$ELSE}
-    if Pos('dj', Result) > 0 then
-      Result := gPath + sReportDir + 'HuaYan42_DJ.fr3'
-    else if Pos('gsysl', Result) > 0 then
-      Result := gPath + sReportDir + 'HuaYan_gsl.fr3'
-    else if Pos('kzf', Result) > 0 then
-      Result := gPath + sReportDir + 'HuaYan_kzf.fr3'
-    else if Pos('qz', Result) > 0 then
-      Result := gPath + sReportDir + 'HuaYan_qz.fr3'
-    else if Pos('32', Result) > 0 then
-      Result := gPath + sReportDir + 'HuaYan32.fr3'
-    else if Pos('42', Result) > 0 then
-      Result := gPath + sReportDir + 'HuaYan42.fr3'
-    else if Pos('52', Result) > 0 then
-      Result := gPath + sReportDir + 'HuaYan42.fr3'
-    else Result := '';
-  {$ENDIF}
 
+  if Pos('dj', Result) > 0 then
+    Result := gPath + sReportDir + 'HuaYan42_DJ.fr3'
+  else if Pos('gsysl', Result) > 0 then
+    Result := gPath + sReportDir + 'HuaYan_gsl.fr3'
+  else if Pos('kzf', Result) > 0 then
+    Result := gPath + sReportDir + 'HuaYan_kzf.fr3'
+  else if Pos('qz', Result) > 0 then
+    Result := gPath + sReportDir + 'HuaYan_qz.fr3'
+  else if Pos('32', Result) > 0 then
+    Result := gPath + sReportDir + 'HuaYan32.fr3'
+  else if Pos('42', Result) > 0 then
+    Result := gPath + sReportDir + 'HuaYan42.fr3'
+  else if Pos('52', Result) > 0 then
+    Result := gPath + sReportDir + 'HuaYan42.fr3'
+  else Result := '';
 end;
 
 //Desc: 打印标识为nHID的化验单
@@ -2599,7 +2562,7 @@ begin
     if not QueryDlg(nStr, sAsk) then Exit;
   end else Result := False;
 
-  {nSR := 'Select * From %s sr ' +
+  nSR := 'Select * From %s sr ' +
          ' Left Join %s sp on sp.P_ID=sr.R_PID';
   nSR := Format(nSR, [sTable_StockRecord, sTable_StockParam]);
 
@@ -2611,13 +2574,6 @@ begin
 
   nStr := MacroValue(nStr, [MI('$HY', sTable_StockHuaYan),
           MI('$Cus', sTable_Customer), MI('$SR', nSR), MI('$ID', nHID)]);
-  //xxxxx    }
-  nStr := 'select a.*,b.*,c.* from $Bill c ' +
-          ' inner join $SR b on b.R_SerialNo=c.L_HYDan ' +
-          ' inner join $SP a on a.P_ID=b.R_PID ' +
-          'where c.L_ID= ''$ID''';
-  nStr := MacroValue(nStr, [MI('$Bill', sTable_Bill), MI('$ID', nHID),
-          MI('$SR', sTable_StockRecord), MI('$SP', sTable_StockParam)]);
   //xxxxx
 
   if FDM.QueryTemp(nStr).RecordCount < 1 then
@@ -2652,6 +2608,13 @@ begin
     if not QueryDlg(nStr, sAsk) then Exit;
   end else Result := False;
 
+  {$IFDEF HeGeZhengSimpleData}
+  nSR := 'Select * From %s hy ' +
+         '  Left Join %s b On b.L_ID=hy.H_Reporter ' +
+         '  Left Join %s sp On sp.P_Stock=b.L_StockName ' +
+         'Where hy.H_ID in (%s)';
+  nStr := Format(nSR, [sTable_StockHuaYan, sTable_Bill, sTable_StockParam, nHID]);
+  {$ELSE}
   nSR := 'Select R_SerialNo,P_Stock,P_Name,P_QLevel From %s sr ' +
          ' Left Join %s sp on sp.P_ID=sr.R_PID';
   nSR := Format(nSR, [sTable_StockRecord, sTable_StockParam]);
@@ -2665,6 +2628,7 @@ begin
   nStr := MacroValue(nStr, [MI('$HY', sTable_StockHuaYan),
           MI('$Cus', sTable_Customer), MI('$SR', nSR), MI('$ID', nHID)]);
   //xxxxx
+  {$ENDIF}
 
   if FDM.QueryTemp(nStr).RecordCount < 1 then
   begin
@@ -2872,69 +2836,750 @@ var nOut: TWorkerBusinessCommand;
 begin
   Result := CallBusinessHardware(cBC_OpenDoorByReader, nReader, nType,
             @nOut, False);
-end;  
+end;
 
-
+//------------------------------------------------------------------------------
 //获取客户注册信息
-function getCustomerInfo(const nXmlStr: string): string;
-var nOut: TWorkerBusinessCommand;
+function getCustomerInfo(const nData: string): string;
+var nOut: TWorkerWebChatData;
 begin
-  Result := '';
-  if CallBusinessCommand(cBC_WeChat_getCustomerInfo, nXmlStr, '', @nOut) then
-    Result := nOut.FData;
+  if CallBusinessWechat(cBC_WX_getCustomerInfo, nData, '', '', @nOut) then
+       Result := nOut.FData
+  else Result := '';
 end;
 
 //客户与微信账号绑定
-function get_Bindfunc(const nXmlStr: string): string;
-var nOut: TWorkerBusinessCommand;
+function get_Bindfunc(const nData: string): string;
+var nOut: TWorkerWebChatData;
 begin
-  Result := '';
-  if CallBusinessCommand(cBC_WeChat_get_Bindfunc, nXmlStr, '', @nOut) then
-    Result := nOut.FData;
+  if CallBusinessWechat(cBC_WX_get_Bindfunc, nData, '', '', @nOut) then
+       Result := nOut.FData
+  else Result := '';
 end;
 
 //发送消息
-function send_event_msg(const nXmlStr: string): string;
-var nOut: TWorkerBusinessCommand;
+function send_event_msg(const nData: string): string;
+var nOut: TWorkerWebChatData;
 begin
-  Result := '';
-  if CallBusinessCommand(cBC_WeChat_send_event_msg, nXmlStr, '', @nOut,false) then
-    Result := nOut.FData;
+  if CallBusinessWechat(cBC_WX_send_event_msg, nData, '', '', @nOut,false) then
+       Result := nOut.FData
+  else Result := '';
 end;
 
 //新增商城用户
-function edit_shopclients(const nXmlStr: string): string;
-var nOut: TWorkerBusinessCommand;
+function edit_shopclients(const nData: string): string;
+var nOut: TWorkerWebChatData;
 begin
-  Result := '';
-  if CallBusinessCommand(cBC_WeChat_edit_shopclients, nXmlStr, '', @nOut) then
-    Result := nOut.FData;
+  if CallBusinessWechat(cBC_WX_edit_shopclients, nData, '', '', @nOut) then
+       Result := nOut.FData
+  else Result := '';
 end;
 
 //添加商品
-function edit_shopgoods(const nXmlStr: string): string;
-var nOut: TWorkerBusinessCommand;
+function edit_shopgoods(const nData: string): string;
+var nOut: TWorkerWebChatData;
 begin
-  Result := '';
-  if CallBusinessCommand(cBC_WeChat_edit_shopgoods, nXmlStr, '', @nOut) then
-    Result := nOut.FData;
+  if CallBusinessWechat(cBC_WX_edit_shopgoods, nData, '', '', @nOut) then
+       Result := nOut.FData
+  else Result := '';
 end;
 
 //获取订单信息
-function get_shoporders(const nXmlStr: string): string;
-var nOut: TWorkerBusinessCommand;
+function get_shoporders(const nData: string): string;
+var nOut: TWorkerWebChatData;
 begin
-  Result := '';
-  if CallBusinessCommand(cBC_WeChat_get_shoporders, nXmlStr, '', @nOut) then
-    Result := nOut.FData;
+  if CallBusinessWechat(cBC_WX_get_shoporders, nData, '', '', @nOut) then
+       Result := nOut.FData
+  else Result := '';
 end;
 
 //更新订单状态
-function complete_shoporders(const nXmlStr: string): string;
+function complete_shoporders(const nData: string): string;
+var nOut: TWorkerWebChatData;
+begin
+  if CallBusinessWechat(cBC_WX_complete_shoporders, nData, '', '', @nOut) then
+       Result := nOut.FData
+  else Result := '';
+end;
+
+//------------------------------------------------------------------------------
+//获取车辆审核信息
+function getAuditTruck(const nData: string): string;
+var nOut: TWorkerWebChatData;
+begin
+  if CallBusinessWechat(cBC_WX_GetAuditTruck, nData, '', '', @nOut) then
+       Result := nOut.FData
+  else Result := '';
+end;
+
+//------------------------------------------------------------------------------
+//车辆审核结果上传
+function UpLoadAuditTruck(const nData: string): string;
+var nOut: TWorkerWebChatData;
+begin
+  if CallBusinessWechat(cBC_WX_UpLoadAuditTruck, nData, '', '', @nOut) then
+       Result := nOut.FData
+  else Result := '';
+end;
+
+//------------------------------------------------------------------------------
+//下载图片
+function DownLoadPic(const nData: string): string;
+var nOut: TWorkerWebChatData;
+begin
+  if CallBusinessWechat(cBC_WX_DownLoadPic, nData, '', '', @nOut) then
+       Result := nOut.FData
+  else Result := '';
+end;
+
+//------------------------------------------------------------------------------
+//根据车牌号获取订单
+function GetshoporderbyTruck(const nData: string): string;
+var nOut: TWorkerWebChatData;
+begin
+  if CallBusinessWechat(cBC_WX_get_shoporderbyTruck, nData, '', '', @nOut) then
+       Result := nOut.FData
+  else Result := '';
+end;
+
+//Date: 2017-11-22
+//Parm: 交货单号,商城申请单
+//Desc: 插入删除推送消息
+procedure SaveWebOrderDelMsg(const nLID, nBillType: string);
+var nStr, nWebOrderID: string;
+    nBool: Boolean;
+begin
+  nStr := 'Select WOM_WebOrderID From %s Where WOM_LID=''%s'' ';
+  nStr := Format(nStr, [sTable_WebOrderMatch, nLID]);
+
+  with FDM.QueryTemp(nStr) do
+  begin
+    if RecordCount <= 0 then
+      Exit;
+    //手工单
+    nWebOrderID := Fields[0].AsString;
+  end;
+
+  nBool := FDM.ADOConn.InTransaction;
+  if not nBool then FDM.ADOConn.BeginTrans;
+  try
+    nStr := 'Insert Into %s(WOM_WebOrderID,WOM_LID,WOM_StatusType,' +
+            'WOM_MsgType,WOM_BillType) Values(''%s'',''%s'',%d,' +
+            '%d,''%s'')';
+    nStr := Format(nStr, [sTable_WebOrderMatch, nWebOrderID, nLID, c_WeChatStatusDeleted,
+            cSendWeChatMsgType_DelBill, nBillType]);
+    FDM.ExecuteSQL(nStr);
+
+    if not nBool then
+      FDM.ADOConn.CommitTrans;
+  except
+    if not nBool then FDM.ADOConn.RollbackTrans;
+  end;
+end;
+
+//------------------------------------------------------------------------------
+//Date: 2017-10-17
+//Parm: 车牌号;保留长度
+//Desc: 将nTruck整合为长度为nLen的字符串
+function GetTruckNO(const nTruck: WideString; const nLong: Integer): string;
+var nStr: string;
+    nIdx,nLen,nPos: Integer;
+begin
+  nPos := 0;
+  nLen := 0;
+
+  for nIdx:=Length(nTruck) downto 1 do
+  begin
+    nStr := nTruck[nIdx];
+    nLen := nLen + Length(nStr);
+
+    if nLen >= nLong then Break;
+    nPos := nIdx;
+  end;
+
+  Result := Copy(nTruck, nPos, Length(nTruck));
+  nIdx := nLong - Length(Result);
+  Result := Result + StringOfChar(' ', nIdx);
+end;
+
+function GetValue(const nValue: Double): string;
+var nStr: string;
+begin
+  nStr := Format('      %.2f', [nValue]);
+  Result := Copy(nStr, Length(nStr) - 6 + 1, 6);
+end;
+
+//验证车辆电子标签
+function IsEleCardVaid(const nTruckNo: string): Boolean;
+var
+  nSql:string;
+begin
+  Result := True;
+
+  nSql := 'select * from %s where T_Truck = ''%s'' ';
+  nSql := Format(nSql,[sTable_Truck,nTruckNo]);
+
+  with FDM.QueryTemp(nSql) do
+  begin
+    if recordcount>0 then
+    begin
+      if FieldByName('T_CardUse').AsString = sFlag_Yes then//启用
+      begin
+        if (FieldByName('T_Card').AsString = '') and (FieldByName('T_Card2').AsString = '') then
+        begin
+          Result := False;
+          Exit;
+        end;
+      end;
+    end;
+  end;
+end;
+
+//验证车辆电子标签
+function IsEleCardVaidEx(const nTruckNo: string): Boolean;
+var
+  nSql:string;
+begin
+  Result := False;
+
+  nSql := 'select * from %s where T_Truck = ''%s'' ';
+  nSql := Format(nSql,[sTable_Truck,nTruckNo]);
+
+  with FDM.QueryTemp(nSql) do
+  begin
+    if recordcount>0 then
+    begin
+      if FieldByName('T_CardUse').AsString = sFlag_Yes then//启用
+      begin
+        if (FieldByName('T_Card').AsString <> '') or (FieldByName('T_Card2').AsString <> '') then
+        begin
+          Result := True;
+        end;
+      end;
+    end;
+  end;
+end;
+
+//验证物料是否需要输入流水
+function IfStockHasLs(const nStockNo: string): Boolean;
+var
+  nSql:string;
+begin
+  Result := False;
+
+  nSql := 'select * from %s where M_ID = ''%s'' ';
+  nSql := Format(nSql,[sTable_Materails,nStockNo]);
+
+  with FDM.QueryTemp(nSql) do
+  begin
+    if recordcount>0 then
+    begin
+      if FieldByName('M_HasLs').AsString = sFlag_Yes then//启用
+      begin
+        Result := True;
+      end;
+    end;
+  end;
+end;
+
+//车辆是否存在未完成采购单
+function IFHasOrder(const nTruck: string): Boolean;
+var nStr: string;
+begin
+  Result := False;
+
+  nStr :='select D_ID from %s where D_Status <> ''%s'' and D_Truck =''%s'' ';
+  nStr := Format(nStr, [sTable_OrderDtl, sFlag_TruckOut, nTruck]);
+  with FDM.QueryTemp(nStr) do
+  if RecordCount > 0 then
+  begin
+    Result := True;
+  end;
+end;
+
+procedure ProberShowTxt(const nTunnel, nText: string);
 var nOut: TWorkerBusinessCommand;
 begin
-  Result := '';
-  if CallBusinessCommand(cBC_WeChat_complete_shoporders, nXmlStr, '', @nOut) then
-    Result := nOut.FData;  
+  CallBusinessHardware(cBC_ShowTxt, nTunnel, nText, @nOut);
 end;
+
+//Desc: 生成销售特定字段数据(特定使用)
+function MakeSaleViewData: Boolean;
+var nID: string;
+    nStr: string;
+    nList : TStrings;
+    nIdx: Integer;
+begin
+  nList := TStringList.Create;
+  try
+    nStr := 'Select top 1000 L_ID , L_MValue From %s ' +
+            'Where L_MValueView is null';
+    nStr := Format(nStr, [sTable_Bill]);
+
+    with FDM.QueryTemp(nStr) do
+    if RecordCount > 0 then
+    begin
+      First;
+
+      while not Eof do
+      begin
+        nID := Fields[0].AsString;
+
+        if Fields[1].AsString = '' then
+        begin
+          Next;
+          Continue;
+        end;
+
+        if Fields[1].AsFloat <= 49 then
+        begin
+          nStr := 'Update %s Set L_MValueview = L_MValue Where L_ID=''%s''';
+          nStr := Format(nStr, [sTable_Bill, nID]);
+          nList.Add(nStr);
+
+          nStr := 'Update %s Set L_Valueview = L_Value Where L_ID=''%s''';
+          nStr := Format(nStr, [sTable_Bill, nID]);
+          nList.Add(nStr);
+
+          nStr := 'Update a set a.P_MValueView = b.L_MValueView,'+
+                  ' a.P_ValueView = b.L_ValueView from %s a, %s b'+
+                  ' where  a.P_Bill = b.L_ID and b.L_ID=''%s''';
+          nStr := Format(nStr, [sTable_PoundLog, sTable_Bill, nID]);
+          nList.Add(nStr);
+        end
+        else
+        begin
+          nStr := 'Update %s Set L_MValueview = (40 + 899*rand() / 100) Where L_ID=''%s''';
+          nStr := Format(nStr, [sTable_Bill, nID]);
+          nList.Add(nStr);
+
+          nStr := 'Update %s Set L_Valueview = L_MValueView - L_PValue Where L_ID=''%s''';
+          nStr := Format(nStr, [sTable_Bill, nID]);
+          nList.Add(nStr);
+
+          nStr := 'Update a set a.P_MValueView = b.L_MValueView,'+
+                  ' a.P_ValueView = b.L_ValueView from %s a, %s b'+
+                  ' where  a.P_Bill = b.L_ID and b.L_ID=''%s''';
+          nStr := Format(nStr, [sTable_PoundLog, sTable_Bill, nID]);
+          nList.Add(nStr);
+        end;
+        Next;
+      end;
+    end;
+
+    FDM.ADOConn.BeginTrans;
+    try
+      for nIdx:=0 to nList.Count - 1 do
+      begin
+        FDM.ExecuteSQL(nList[nIdx]);
+      end;
+      FDM.ADOConn.CommitTrans;
+    except
+      On E: Exception do
+      begin
+        Result := False;
+        FDM.ADOConn.RollbackTrans;
+        WriteLog(E.Message);
+      end;
+    end;
+  finally
+    nList.Free;
+  end;
+end;
+
+//Desc: 生成采购特定字段数据(特定使用)
+function MakeOrderViewData: Boolean;
+var nID: string;
+    nStr: string;
+    nList : TStrings;
+    nIdx: Integer;
+begin
+  nList := TStringList.Create;
+  try
+    nStr := 'Select top 1000 D_ID ,D_MValue From %s ' +
+            'Where D_MValueView is null';
+    nStr := Format(nStr, [sTable_OrderDtl]);
+
+    with FDM.QueryTemp(nStr) do
+    if RecordCount > 0 then
+    begin
+      First;
+
+      while not Eof do
+      begin
+        nID := Fields[0].AsString;
+
+        if Fields[1].AsString = '' then
+        begin
+          Next;
+          Continue;
+        end;
+
+        if Fields[1].AsFloat <= 49 then
+        begin
+          nStr := 'Update %s Set D_MValueview = D_MValue Where D_ID=''%s''';
+          nStr := Format(nStr, [sTable_OrderDtl, nID]);
+          nList.Add(nStr);
+
+          nStr := 'Update %s Set D_Valueview = D_MValue - D_PValue Where D_ID=''%s''';
+          nStr := Format(nStr, [sTable_OrderDtl, nID]);
+          nList.Add(nStr);
+
+          nStr := 'Update a set a.P_MValueView = b.D_MValueView,'+
+                  ' a.P_ValueView = b.D_ValueView from %s a, %s b'+
+                  ' where  a.P_Order = b.D_ID and b.D_ID=''%s''';
+          nStr := Format(nStr, [sTable_PoundLog, sTable_OrderDtl, nID]);
+          nList.Add(nStr);
+        end
+        else
+        begin
+          nStr := 'Update %s Set D_MValueview = (40 + 899*rand() / 100) Where D_ID=''%s''';
+          nStr := Format(nStr, [sTable_OrderDtl, nID]);
+          nList.Add(nStr);
+
+          nStr := 'Update %s Set D_Valueview = D_MValueView - D_PValue Where D_ID=''%s''';
+          nStr := Format(nStr, [sTable_OrderDtl, nID]);
+          nList.Add(nStr);
+
+          nStr := 'Update a set a.P_MValueView = b.D_MValueView,'+
+                  ' a.P_ValueView = b.D_ValueView from %s a, %s b'+
+                  ' where  a.P_Order = b.D_ID and b.D_ID=''%s''';
+          nStr := Format(nStr, [sTable_PoundLog, sTable_OrderDtl, nID]);
+          nList.Add(nStr);
+        end;
+        Next;
+      end;
+    end;
+
+    FDM.ADOConn.BeginTrans;
+    try
+      for nIdx:=0 to nList.Count - 1 do
+      begin
+        FDM.ExecuteSQL(nList[nIdx]);
+      end;
+      FDM.ADOConn.CommitTrans;
+    except
+      On E: Exception do
+      begin
+        Result := False;
+        FDM.ADOConn.RollbackTrans;
+        WriteLog(E.Message);
+      end;
+    end;
+  finally
+    nList.Free;
+  end;
+end;
+
+//Date: 2017-09-22
+//Parm: 开短倒数据
+//Desc: 保存短倒单,返回短倒单号列表
+function SaveDDBases(const nDDData: string): string;
+var nOut: TWorkerBusinessCommand;
+begin
+  if CallBusinessDuanDao(cBC_SaveBills, nDDData, '', @nOut) then
+       Result := nOut.FData
+  else Result := '';
+end;
+
+//Date: 2017-09-22
+//Parm: 短倒单号
+//Desc: 删除nBillID单据
+function DeleteDDBase(const nBase: string): Boolean;
+var nOut: TWorkerBusinessCommand;
+begin
+  Result := CallBusinessDuanDao(cBC_DeleteBill, nBase, '', @nOut);
+end;
+
+//Date: 2017-09-22
+//Parm: 磁卡号
+//Desc: 注销nCard
+function LogoutDDCard(const nCard: string): Boolean;
+var nOut: TWorkerBusinessCommand;
+begin
+  Result := CallBusinessDuanDao(cBC_LogoffCard, nCard, '', @nOut);
+end;
+
+//Date: 2019-07-22
+//Parm: 短倒编号,磁卡号
+//Desc: 绑定磁卡nCard
+function SaveDDCard(const nBID, nCard: string): Boolean;
+var nOut: TWorkerBusinessCommand;
+begin
+  Result := CallBusinessDuanDao(cBC_SaveBillCard, nBID, nCard, @nOut);
+end;
+
+//Date: 2017-09-22
+//Parm: 磁卡号;岗位;短倒单列表
+//Desc: 获取nPost岗位上磁卡为nCard的短倒单列表
+function GetDuanDaoItems(const nCard,nPost: string;
+  var nBills: TLadingBillItems): Boolean;
+var nOut: TWorkerBusinessCommand;
+begin
+  Result := CallBusinessDuanDao(cBC_GetPostBills, nCard, nPost, @nOut);
+  if Result then
+    AnalyseBillItems(nOut.FData, nBills);
+  //xxxxx
+end;
+
+function DeleteDDDetial(const nDID: string): Boolean;
+var nOut: TWorkerBusinessCommand;
+begin
+  Result := CallBusinessDuanDao(cBC_DeleteOrder, nDID, '', @nOut);
+end;
+
+function SetDDCard(const nBill,nTruck: string; nVerify: Boolean): Boolean;
+var nStr: string;
+    nP: TFormCommandParam;
+begin
+  Result := True;
+  if nVerify then
+  begin
+    nStr := 'Select D_Value From %s Where D_Name=''%s'' And D_Memo=''%s''';
+    nStr := Format(nStr, [sTable_SysDict, sFlag_SysParam, sFlag_ViaBillCard]);
+
+    with FDM.QueryTemp(nStr) do
+     if (RecordCount < 1) or (Fields[0].AsString <> sFlag_Yes) then Exit;
+    //no need do card
+  end;
+
+  nP.FParamA := nBill;
+  nP.FParamB := nTruck;
+  nP.FParamC := sFlag_DuanDao;
+  CreateBaseFormItem(cFI_FormMakeCard, '', @nP);
+  Result := (nP.FCommand = cCmd_ModalResult) and (nP.FParamA = mrOK);
+end;
+
+//Date: 2017-09-22
+//Parm: 短倒ID;是否打印
+//Desc: 打印短倒明细
+function PrintDuanDaoReport(const nID: string; nAsk: Boolean): Boolean;
+var nStr: string;
+    nParam: TReportParamItem;
+begin
+  Result := False;
+
+  if nAsk then
+  begin
+    nStr := '是否要打印短倒单?';
+    if not QueryDlg(nStr, sAsk) then Exit;
+  end;
+
+  nStr := 'Select * From %s Where T_ID=''%s''';
+  nStr := Format(nStr, [sTable_Transfer, nID]);
+
+  if FDM.QueryTemp(nStr).RecordCount < 1 then
+  begin
+    nStr := '短倒记录[ %s ] 已无效!!';
+    nStr := Format(nStr, [nID]);
+    ShowMsg(nStr, sHint); Exit;
+  end;
+
+  nStr := gPath + sReportDir + 'DuanDao.fr3';
+  if not FDR.LoadReportFile(nStr) then
+  begin
+    nStr := '无法正确加载报表文件';
+    ShowMsg(nStr, sHint); Exit;
+  end;
+
+  nParam.FName := 'UserName';
+  nParam.FValue := gSysParam.FUserID;
+  FDR.AddParamItem(nParam);
+
+  nParam.FName := 'Company';
+  nParam.FValue := gSysParam.FHintText;
+  FDR.AddParamItem(nParam);
+
+  FDR.Dataset1.DataSet := FDM.SqlTemp;
+  FDR.ShowReport;
+  Result := FDR.PrintSuccess;
+end;
+
+//Date: 2017-09-22
+//Parm: 岗位;短倒单列表;磅站通道
+//Desc: 保存nPost岗位上的短倒单数据
+function SaveDuanDaoItems(const nPost: string; const nData: TLadingBillItems;
+ const nTunnel: PPTTunnelItem;const nLogin: Integer): Boolean;
+var nStr: string;
+    nIdx: Integer;
+    nList: TStrings;
+    nOut: TWorkerBusinessCommand;
+begin
+  nStr := CombineBillItmes(nData);
+  Result := CallBusinessDuanDao(cBC_SavePostBills, nStr, nPost, @nOut);
+  if (not Result) or (nOut.FData = '') then Exit;
+
+  if Assigned(nTunnel) then //过磅称重
+  begin
+    nList := TStringList.Create;
+    try
+      {$IFDEF CapturePictureEx}
+      CapturePictureEx(nTunnel, nLogin, nList);
+      {$ELSE}
+      CapturePicture(nTunnel, nList);
+      //capture file
+      {$ENDIF}
+
+      for nIdx:=0 to nList.Count - 1 do
+        SavePicture(nOut.FData, nData[0].FTruck,
+                                nData[0].FStockName, nList[nIdx]);
+      //save file
+    finally
+      nList.Free;
+    end;
+  end; 
+end;
+
+//Date: 2018-09-25
+//Parm: 通道;登陆ID;列表
+//Desc: 抓拍nTunnel的图像
+procedure CapturePictureEx(const nTunnel: PPTTunnelItem;
+                         const nLogin: Integer; nList: TStrings);
+const
+  cRetry = 2;
+  //重试次数
+var nStr: string;
+    nIdx,nInt: Integer;
+    nErr: Integer;
+    nPic: NET_DVR_JPEGPARA;
+    nInfo: TNET_DVR_DEVICEINFO;
+begin
+  nList.Clear;
+  if not Assigned(nTunnel.FCamera) then Exit;
+  //not camera
+  if nLogin <= -1 then Exit;
+
+  WriteLog(nTunneL.FID + '开始抓拍');
+  if not DirectoryExists(gSysParam.FPicPath) then
+    ForceDirectories(gSysParam.FPicPath);
+  //new dir
+
+  if gSysParam.FPicBase >= 100 then
+    gSysParam.FPicBase := 0;
+  //clear buffer
+
+  try
+
+    nPic.wPicSize := nTunnel.FCamera.FPicSize;
+    nPic.wPicQuality := nTunnel.FCamera.FPicQuality;
+
+    for nIdx:=Low(nTunnel.FCameraTunnels) to High(nTunnel.FCameraTunnels) do
+    begin
+      if nTunnel.FCameraTunnels[nIdx] = MaxByte then continue;
+      //invalid
+
+      for nInt:=1 to cRetry do
+      begin
+        nStr := MakePicName();
+        //file path
+
+        gCameraNetSDKMgr.NET_DVR_CaptureJPEGPicture(nLogin,
+                                   nTunnel.FCameraTunnels[nIdx],
+                                   nPic, nStr);
+        //capture pic
+
+        nErr := gCameraNetSDKMgr.NET_DVR_GetLastError;
+
+        if nErr = 0 then
+        begin
+          WriteLog('通道'+IntToStr(nTunnel.FCameraTunnels[nIdx])+'抓拍成功');
+          nList.Add(nStr);
+          Break;
+        end;
+
+        if nIdx = cRetry then
+        begin
+          nStr := '抓拍图像[ %s.%d ]失败,错误码: %d';
+          nStr := Format(nStr, [nTunnel.FCamera.FHost,
+                   nTunnel.FCameraTunnels[nIdx], nErr]);
+          WriteLog(nStr);
+        end;
+      end;
+    end;
+  except
+  end;
+end;
+
+function InitCapture(const nTunnel: PPTTunnelItem; var nLogin: Integer): Boolean;
+const
+  cRetry = 2;
+  //重试次数
+var nStr: string;
+    nIdx,nInt: Integer;
+    nErr: Integer;
+    nInfo: TNET_DVR_DEVICEINFO;
+begin
+  Result := False;
+  if not Assigned(nTunnel.FCamera) then Exit;
+  //not camera
+
+  try
+    nLogin := -1;
+    gCameraNetSDKMgr.NET_DVR_SetDevType(nTunnel.FCamera.FType);
+    //xxxxx
+
+    gCameraNetSDKMgr.NET_DVR_Init;
+    //xxxxx
+
+    for nIdx:=1 to cRetry do
+    begin
+      nLogin := gCameraNetSDKMgr.NET_DVR_Login(nTunnel.FCamera.FHost,
+                   nTunnel.FCamera.FPort,
+                   nTunnel.FCamera.FUser,
+                   nTunnel.FCamera.FPwd, nInfo);
+      //to login
+
+      nErr := gCameraNetSDKMgr.NET_DVR_GetLastError;
+      if nErr = 0 then break;
+
+      if nIdx = cRetry then
+      begin
+        nStr := '登录摄像机[ %s.%d ]失败,错误码: %d';
+        nStr := Format(nStr, [nTunnel.FCamera.FHost, nTunnel.FCamera.FPort, nErr]);
+        WriteLog(nStr);
+        if nLogin > -1 then
+         gCameraNetSDKMgr.NET_DVR_Logout(nLogin);
+        gCameraNetSDKMgr.NET_DVR_Cleanup();
+        Exit;
+      end;
+    end;
+    Result := True;
+  except
+
+  end;
+end;
+
+function FreeCapture(nLogin: Integer): Boolean;
+begin
+  Result := False;
+  try
+    if nLogin > -1 then
+     gCameraNetSDKMgr.NET_DVR_Logout(nLogin);
+    gCameraNetSDKMgr.NET_DVR_Cleanup();
+
+    Result := True;
+  except
+
+  end;
+end;
+
+
+//Date: 2019-04-12
+//Parm: 单号
+//Desc: 同步单据到erp
+function SyncBillToErp(const nBillID:string):Boolean;
+var nOut: TWorkerBusinessCommand;
+begin
+  result := CallBusinessCommand(cBC_SyncBillToNC, nBillID, '' , @nOut);
+end;
+
+//Date: 2019-04-12
+//Parm: 单号
+//Desc: 同步单据到备用库
+function SyncBillToBakDB(const nBillID:string):Boolean;
+var nOut: TWorkerBusinessCommand;
+begin
+  result := CallBusinessCommand(cBC_SyncStockBill, nBillID, '' , @nOut);
+end;
+
 end.

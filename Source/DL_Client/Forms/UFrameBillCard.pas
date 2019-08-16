@@ -14,7 +14,7 @@ uses
   dxLayoutControl, cxMaskEdit, cxButtonEdit, ADODB, cxLabel, UBitmapPanel,
   cxSplitter, cxGridLevel, cxClasses, cxGridCustomView,
   cxGridCustomTableView, cxGridTableView, cxGridDBTableView, cxGrid,
-  ComCtrls, ToolWin, dxLayoutcxEditAdapters;
+  ComCtrls, ToolWin;
 
 type
   TfFrameBillCard = class(TfFrameNormal)
@@ -170,12 +170,9 @@ begin
          nStr := nStr + 'Where (C_Date>=''$S'' and C_Date<''$End'')'
     else nStr := nStr + 'Where (' + FWhere + ')';
 
-    nStr := nStr + ' and C_Used=''$CUSED'' ';
-
     nStr := MacroValue(nStr, [MI('$BC', sTable_Card),
-            MI('$Bill', sTable_Bill),MI('$CUSED', sFlag_Sale),
+            MI('$Bill', sTable_Bill),
             MI('$S', Date2Str(FStart)), MI('$End', Date2Str(FEnd + 1))]);
-
     FDM.QueryData(SQLQuery, nStr);
   end;
 

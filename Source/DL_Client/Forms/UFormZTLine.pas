@@ -52,6 +52,7 @@ type
     procedure GetData(Sender: TObject; var nData: string);
     function SetData(Sender: TObject; const nData: string): Boolean;
     //数据处理
+    procedure WriteOptionLog;
   public
     { Public declarations }
     function OnVerifyCtrl(Sender: TObject; var nHint: string): Boolean; override;
@@ -77,11 +78,24 @@ type
     FName : string;
   end;
 
+  TLineOldItem = record
+    FID        : string;
+    FName      : string;
+    FStockNO   : string;
+    FStockName : string;
+    FType      : string;
+    FQueueMax  : string;
+    FPeer      : string;
+    FValid     : Boolean;
+  end;
+
 var
   gStockItems: array of TLineStockItem;
   //品种列表
    gCheckValid: boolean;
   //通道钩选属性
+  gOldLine: TLineOldItem;
+  //原始通道配置
 
 function ShowAddZTLineForm: Boolean;
 begin
@@ -170,6 +184,16 @@ begin
       Next;
     end;
   end;
+
+  //记录通道属性
+  gOldLine.FID        := EditID.Text;
+  gOldLine.FName      := EditName.Text;
+  gOldLine.FStockNO   := EditStockID.Text;
+  gOldLine.FStockName := EditStockName.Text;
+  gOldLine.FType      := EditType.Text;
+  gOldLine.FQueueMax  := EditMax.Text;
+  gOldLine.FPeer      := EditPeer.Text;
+  gOldLine.FValid     := CheckValid.Checked = True;
 end;
 
 procedure TfFormZTLine.EditStockIDPropertiesChange(Sender: TObject);
@@ -302,20 +326,106 @@ begin
   ModalResult := mrOk;
 
   //--------------
-  if   gCheckValid = false then
-  begin
-       nEvent := '通道 [ %s ] 关闭';
-       nEvent := Format(nEvent, [EditID.Text]);
-       FDM.WriteSysLog(sFlag_TruckQueue, 'UFromZTline', nEvent);
-  end;
-  if   gCheckValid = true  then
-  begin
-       nEvent := '通道 [ %s ] 开启';
-       nEvent := Format(nEvent, [EditID.Text]);
-       FDM.WriteSysLog(sFlag_TruckQueue, 'UFromZTline',nEvent);
-  end;
+//  if   gCheckValid = false then
+//  begin
+//       nEvent := '通道 [ %s ] 关闭';
+//       nEvent := Format(nEvent, [EditID.Text]);
+//       FDM.WriteSysLog(sFlag_TruckQueue, 'UFromZTline', nEvent);
+//  end;
+//  if   gCheckValid = true  then
+//  begin
+//       nEvent := '通道 [ %s ] 开启';
+//       nEvent := Format(nEvent, [EditID.Text]);
+//       FDM.WriteSysLog(sFlag_TruckQueue, 'UFromZTline',nEvent);
+//  end;
+  WriteOptionLog;
   //--写入操作通道日志
   ShowMsg('通道已保存,请等待刷新', sHint);
+end;
+
+procedure TfFormZTLine.WriteOptionLog;
+var nEvent: string;
+begin
+  nEvent := '';
+
+  if FID = '' then//add
+  begin
+    nEvent := '添加通道,通道编号[ %s ],通道名称[ %s ],品种编号[ %s ],' +
+              '品种名称[ %s ],栈台类型[ %s ],队列容量[ %s ],单袋重量[ %s ],' +
+              '是否启用[ %s ]';
+    if gCheckValid = false then
+    begin
+      nEvent := Format(nEvent, [EditID.Text, EditName.Text, EditStockID.Text,
+                                EditStockName.Text, EditType.Text, EditMax.Text,
+                                EditPeer.Text,'否']);
+    end;
+    if gCheckValid = true  then
+    begin
+      nEvent := Format(nEvent, [EditID.Text, EditName.Text, EditStockID.Text,
+                                EditStockName.Text, EditType.Text, EditMax.Text,
+                                EditPeer.Text,'是']);
+    end;
+  end
+  else//modify
+  begin
+    if gOldLine.FID <> EditID.Text then
+    begin
+      nEvent := nEvent + '通道编号由 [ %s ] --> [ %s ];';
+      nEvent := Format(nEvent, [gOldLine.FID, EditID.Text]);
+    end;
+    if gOldLine.FName <> EditName.Text then
+    begin
+      nEvent := nEvent + '通道名称由 [ %s ] --> [ %s ];';
+      nEvent := Format(nEvent, [gOldLine.FName, EditName.Text]);
+    end;
+    if gOldLine.FStockNO <> EditStockID.Text then
+    begin
+      nEvent := nEvent + '品种编号由 [ %s ] --> [ %s ];';
+      nEvent := Format(nEvent, [gOldLine.FStockNO, EditStockID.Text]);
+    end;
+    if gOldLine.FStockName <> EditStockName.Text then
+    begin
+      nEvent := nEvent + '品种名称由 [ %s ] --> [ %s ];';
+      nEvent := Format(nEvent, [gOldLine.FStockName, EditStockName.Text]);
+    end;
+    if gOldLine.FType <> EditType.Text then
+    begin
+      nEvent := nEvent + '栈台类型由 [ %s ] --> [ %s ];';
+      nEvent := Format(nEvent, [gOldLine.FType, EditType.Text]);
+    end;
+    if gOldLine.FQueueMax <> EditMax.Text then
+    begin
+      nEvent := nEvent + '队列容量由 [ %s ] --> [ %s ];';
+      nEvent := Format(nEvent, [gOldLine.FQueueMax, EditMax.Text]);
+    end;
+    if gOldLine.FPeer <> EditPeer.Text then
+    begin
+      nEvent := nEvent + '单袋重量由 [ %s ] --> [ %s ];';
+      nEvent := Format(nEvent, [gOldLine.FPeer, EditPeer.Text]);
+    end;
+    if gOldLine.FValid <> gCheckValid then
+    begin
+      if gCheckValid then
+      begin
+        nEvent := nEvent + '通道状态由 [ 关闭 ] --> [ 启用 ];';
+      end
+      else
+      begin
+        nEvent := nEvent + '通道状态由 [ 启用 ] --> [ 关闭 ];';
+      end;
+    end;
+
+    if nEvent <> '' then
+    begin
+      nEvent := '通道 [ %s ] 参数已被修改:' + nEvent;
+      nEvent := Format(nEvent, [gOldLine.FID]);
+    end;
+  end;
+
+  if nEvent <> '' then
+  begin
+    FDM.WriteSysLog(sFlag_TruckQueue, EditID.Text, nEvent);
+  end;
 end;
 
 initialization

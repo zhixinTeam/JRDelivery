@@ -10,8 +10,7 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   USysBusiness, UFormNormal, cxGraphics, cxControls, cxLookAndFeels,
   cxLookAndFeelPainters, ComCtrls, cxContainer, cxEdit, cxTextEdit,
-  cxListView, cxMCListBox, dxLayoutControl, StdCtrls,
-  dxLayoutcxEditAdapters;
+  cxListView, cxMCListBox, dxLayoutControl, StdCtrls;
 
 type
   TfFormTruckOut = class(TfFormNormal)
@@ -75,7 +74,6 @@ begin
     if nStr = '' then Continue;
 
     gCardUsed := GetCardUsed(nStr);
-    
     if gCardUsed = sFlag_Provide then
       nRet := GetPurchaseOrders(nStr, sFlag_TruckIn, gBills) else
     if gCardUsed = sFlag_Sale then

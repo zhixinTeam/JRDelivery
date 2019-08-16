@@ -10,8 +10,8 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   UFormNormal, cxGraphics, cxControls, cxLookAndFeels,
   cxLookAndFeelPainters, ComCtrls, cxContainer, cxEdit, cxTextEdit,
-  cxListView, cxMCListBox, dxLayoutControl, StdCtrls,
-  dxLayoutcxEditAdapters;
+  cxListView, cxMCListBox, dxLayoutControl, StdCtrls, dxSkinsCore,
+  dxSkinsDefaultPainters, dxLayoutcxEditAdapters;
 
 type
   TfFormTruckIn = class(TfFormNormal)
@@ -75,9 +75,7 @@ begin
     if nStr = '' then Continue;
 
     gCardUsed := GetCardUsed(nStr);
-    {if gCardUsed = sFlag_Provide then
-         nRet := GetPurchaseOrders(nStr, sFlag_TruckIn, gBills)
-    else nRet := GetLadingBills(nStr, sFlag_TruckIn, gBills);}
+
     if gCardUsed = sFlag_Provide then
       nRet := GetPurchaseOrders(nStr, sFlag_TruckIn, gBills) else
     if gCardUsed = sFlag_Sale then

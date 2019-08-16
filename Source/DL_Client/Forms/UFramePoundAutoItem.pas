@@ -68,6 +68,8 @@ type
     { Private declarations }
     FCardUsed: string;
     //卡片类型
+    FLEDContent: string;
+    //显示屏内容
     FIsWeighting, FIsSaving: Boolean;
     //称重标识,保存标识
     FPoundTunnel: PPTTunnelItem;
@@ -83,11 +85,17 @@ type
     FSampleIndex: Integer;
     FValueSamples: array of Double;
     //数据采样
+    FVirPoundID: string;
+    //虚拟地磅编号
     FBarrierGate: Boolean;
     //是否采用道闸
+    FSaveResult: Boolean;
+    //保存结果
     FEmptyPoundInit, FDoneEmptyPoundInit: Int64;
     //空磅计时,过磅保存后空磅
     FEmptyPoundIdleLong, FEmptyPoundIdleShort: Int64;
+    FLogin: Integer;
+    //摄像机登陆
     procedure SetUIData(const nReset: Boolean; const nOnlyData: Boolean = False);
     //界面数据
     procedure SetImageStatus(const nImage: TImage; const nOff: Boolean);
@@ -110,7 +118,7 @@ type
     //记录日志
     procedure PlayVoice(const nStrtext: string);
     //播放语音
-    procedure LEDDisplay(const nStrtext: string);
+    procedure LEDDisplay(const nContent: string);
     //LED显示
   public
     { Public declarations }
@@ -145,14 +153,19 @@ begin
   inherited;
   FPoundTunnel := nil;
   FIsWeighting := False;
-  
+
+  FLEDContent := '';
   FEmptyPoundInit := 0;
+  FLogin := -1;
 end;
 
 procedure TfFrameAutoPoundItem.OnDestroyFrame;
 begin
   gPoundTunnelManager.ClosePort(FPoundTunnel.FID);
   //关闭表头端口
+  {$IFDEF CapturePictureEx}
+  FreeCapture(FLogin);
+  {$ENDIF}
   inherited;
 end;
 
@@ -238,9 +251,17 @@ begin
   FPoundTunnel := nTunnel;
   SetUIData(True);
 
+  {$IFDEF CapturePictureEx}
+  if not InitCapture(FPoundTunnel,FLogin) then
+    WriteLog('通道:'+ FPoundTunnel.FID+'初始化失败,错误码:'+IntToStr(FLogin))
+  else
+    WriteLog('通道:'+ FPoundTunnel.FID+'初始化成功,登陆ID:'+IntToStr(FLogin));
+  {$ENDIF}
+
   if Assigned(FPoundTunnel.FOptions) then
   with FPoundTunnel.FOptions do
   begin
+    FVirPoundID  := Values['VirPoundID'];
     FBarrierGate := Values['BarrierGate'] = sFlag_Yes;
     FEmptyPoundIdleLong := StrToInt64Def(Values['EmptyIdleLong'], 60);
     FEmptyPoundIdleShort:= StrToInt64Def(Values['EmptyIdleShort'], 5);
@@ -375,7 +396,7 @@ procedure TfFrameAutoPoundItem.LoadBillItems(const nCard: string);
 var nRet: Boolean;
     nIdx,nInt: Integer;
     nBills: TLadingBillItems;
-    nStr,nHint, nVoice: string;
+    nStr,nHint, nVoice, nLabel: string;
 begin
   nStr := Format('读取到卡号[ %s ],开始执行业务.', [nCard]);
   WriteLog(nStr);
@@ -387,6 +408,9 @@ begin
      nRet := GetDuanDaoItems(nCard, sFlag_TruckBFP, nBills) else
   if FCardUsed=sFlag_Sale then
      nRet := GetLadingBills(nCard, sFlag_TruckBFP, nBills) else nRet := False;
+//  if FCardUsed=sFlag_Provide then
+//       nRet := GetPurchaseOrders(nCard, sFlag_TruckBFP, nBills)
+//  else nRet := GetLadingBills(nCard, sFlag_TruckBFP, nBills);
 
   if (not nRet) or (Length(nBills) < 1)
   then
@@ -397,7 +421,7 @@ begin
     SetUIData(True);
     Exit;
   end;
-  
+
   nHint := '';
   nInt := 0;
 
@@ -451,7 +475,7 @@ begin
     begin
       FPoundID := '';
       //该标记有特殊用途
-      
+
       if nInt = 0 then
            FInnerData := nBills[nIdx]
       else FInnerData.FValue := FInnerData.FValue + FValue;
@@ -479,6 +503,28 @@ begin
   end;
   //指定时间内车辆禁止过磅
 
+  if FVirPoundID <> '' then
+  begin
+    nLabel := GetTruckRealLabel(FUIData.FTruck);
+    if nLabel <> '' then
+    begin
+      nHint := ReadPoundCardEx(nStr, FVirPoundID);
+      if (nHint = '') or (Pos(nLabel, nHint) < 1) then
+      begin
+        nStr := '未识别电子签,请移动车辆.';
+        PlayVoice(nStr);
+
+        nStr := '磅站[ %s.%s ]: 车辆[ %s.%s ]电子标签不匹配[ %s ],禁止上磅';
+        nStr := Format(nStr, [FPoundTunnel.FID, FPoundTunnel.FName,
+                FUIData.FTruck, nLabel, nHint]);
+        WriteSysLog(nStr);
+        SetUIData(True);
+        Exit;
+      end;
+    end;
+  end;
+  //判断车辆是否就位
+
   InitSamples;
   //初始化样本
 
@@ -491,7 +537,7 @@ begin
 
     nVoice := nHint;
     PlayVoice(nVoice);
-    
+
     SetUIData(True);
     Exit;
   end;
@@ -499,12 +545,23 @@ begin
   Timer_ReadCard.Enabled := False;
   FDoneEmptyPoundInit := 0;
   FIsWeighting := True;
+  FSaveResult := True;
   //停止读卡,开始称重
 
   if FBarrierGate then
   begin
+    {$IFDEF ZZSJ}
+    if (FUIData.FStatus = sFlag_TruckIn) or
+       (FUIData.FStatus = sFlag_TruckBFP) then
+    begin
+      nStr := '[n1]%s刷卡成功请上磅,并熄火停车,进厂请系好安全带,戴好安全帽';
+      nStr := Format(nStr, [FUIData.FTruck]);
+    end;
+    {$ELSE}
     nStr := '[n1]%s刷卡成功请上磅,并熄火停车';
     nStr := Format(nStr, [FUIData.FTruck]);
+    {$ENDIF}
+    
     PlayVoice(nStr);
     //读卡成功，语音提示
 
@@ -578,11 +635,10 @@ end;
 function TfFrameAutoPoundItem.SavePoundSale: Boolean;
 var nStr: string;
     nVal,nNet: Double;
-    nMemo: string;
-    nDaiNum, nWuchaNum :Integer;
 begin
   Result := False;
   //init
+
   if FBillItems[0].FNextStatus = sFlag_TruckBFP then
   begin
     if FUIData.FPData.FValue <= 0 then
@@ -596,39 +652,41 @@ begin
 
     if (nNet > 0) and (Abs(nVal) > gSysParam.FPoundSanF) then
     begin
-      if gSysParam.FMonitorType = sFlag_Yes then
-      begin
-        //监装模式
-        if not VerifyManualEventRecord(FUIData.FID + sFlag_ManualB, nStr) then
-        begin
-          nMemo := 'Truck=%s;PStation=%s;Pound_PValue=%.2f;Pound_Card=%s';
-          nMemo := Format(nMemo, [FUIData.FTruck, FPoundTunnel.FID, FUIData.FPData.FValue, FUIData.FCard]);
+      {$IFDEF AutoPoundInManual}
+      nStr := '车辆[%s]实时皮重误差较大,请通知司机检查车厢';
+      nStr := Format(nStr, [FUIData.FTruck]);
+      PlayVoice(nStr);
 
-          AddManualEventRecord(FUIData.FID + sFlag_ManualB, FUIData.FTruck, nStr,
-              sFlag_DepBangFang, sFlag_Solution_YNP, sFlag_DepDaTing, True, nMemo);
+      nStr := '车辆[ %s ]实时皮重误差较大,详情如下:' + #13#10#13#10 +
+              '※.实时皮重: %.2f吨' + #13#10 +
+              '※.历史皮重: %.2f吨' + #13#10 +
+              '※.误差量: %.2f公斤' + #13#10#13#10 +
+              '是否继续保存?';
+      nStr := Format(nStr, [FUIData.FTruck, FUIData.FPData.FValue,
+              nNet, nVal]);
+      if not QueryDlg(nStr, sAsk) then Exit;
+      {$ELSE}
+      nStr := '车辆[ %s ]实时皮重误差较大,详情如下:' + #13#10 +
+              '※.实时皮重: %.2f吨' + #13#10 +
+              '※.历史皮重: %.2f吨' + #13#10 +
+              '※.误差量: %.2f公斤' + #13#10 +
+              '允许过磅,请选是;禁止过磅,请选否.';
+      nStr := Format(nStr, [FUIData.FTruck, FUIData.FPData.FValue,
+              nNet, nVal]);
 
-          nStr := '[n1]%s皮重超出预警,请下磅联系开票员处理后再次过磅';
-          nStr := Format(nStr, [FUIData.FTruck]);
-          WriteSysLog(nStr);
-          PlayVoice(nStr);
-          Exit;
-        end;
-      end
-      else
+      if not VerifyManualEventRecord(FUIData.FID + sFlag_ManualB, nStr,
+        sFlag_Yes, False) then
       begin
-        nStr := '车辆[%s]实时皮重误差较大,请通知司机检查车厢';
+        AddManualEventRecord(FUIData.FID + sFlag_ManualB, FUIData.FTruck, nStr,
+            sFlag_DepBangFang, sFlag_Solution_YN, sFlag_DepDaTing, True);
+        WriteSysLog(nStr);
+
+        nStr := '[n1]%s皮重超出预警,请下磅联系开票员处理后再次过磅';
         nStr := Format(nStr, [FUIData.FTruck]);
         PlayVoice(nStr);
-
-        nStr := '车辆[ %s ]实时皮重误差较大,详情如下:' + #13#10#13#10 +
-                '※.实时皮重: %.2f吨' + #13#10 +
-                '※.历史皮重: %.2f吨' + #13#10 +
-                '※.误差量: %.2f公斤' + #13#10#13#10 +
-                '是否继续保存?';
-        nStr := Format(nStr, [FUIData.FTruck, FUIData.FPData.FValue,
-                nNet, nVal]);
-        if not QueryDlg(nStr, sAsk) then Exit;
+        Exit;
       end;
+      {$ENDIF}
     end;
   end else
   begin
@@ -646,7 +704,6 @@ begin
       if FUIData.FPData.FValue > FUIData.FMData.FValue then
       begin
         WriteLog('皮重应小于毛重');
-        PlayVoice('皮重应小于毛重');
         Exit;
       end;
 
@@ -678,6 +735,7 @@ begin
             ((nVal > 0) and (FPoundDaiZ > 0) and (nVal > FPoundDaiZ)) or
             ((nVal < 0) and (FPoundDaiF > 0) and (-nVal > FPoundDaiF)))) then
         begin
+          {$IFDEF AutoPoundInManual}
           nStr := '车辆[%s]实际装车量误差较大，请通知司机点验包数';
           nStr := Format(nStr, [FTruck]);
           PlayVoice(nStr);
@@ -696,38 +754,42 @@ begin
             Exit;
           end else
           begin
-            if FMonitorType = sFlag_Yes then
-            begin
-              //监装模式
-              //计算袋数
-              nWuchaNum := Round(-nVal- FPoundDaiF);
-              if (nWuchaNum mod 50) = 0 then
-                nDaiNum := nWuchaNum div 50
-              else
-                nDaiNum := (nWuchaNum div 50) + 1;
-              //2017-10-05  推送到别的岗位
-              if not VerifyManualEventRecord(FID + sFlag_ManualC, nStr) then
-              begin
-                AddManualEventRecord(FID + sFlag_ManualC, FTruck, nStr,
-                  sFlag_DepBangFang, sFlag_Solution_YN, sFlag_DepJianZhuang, True);
-
-                nStr := '车辆[n1]%s净重[n2]%.2f吨,开票量[n2]%.2f吨,'+
-                         '误差量[n2]%.2f袋,请去包装点包';
-                nStr := Format(nStr, [FTruck,nNet,FInnerData.FValue,nDaiNum]);
-
-                WriteSysLog(nStr);
-
-                PlayVoice(nStr);
-                Exit;
-              end;
-            end
-            else
-            begin
-              nStr := nStr + #13#10#13#10 + '是否继续保存?';
-              nStr := Format(nStr, [FTruck, FInnerData.FValue, nNet, nVal]);
-              if not QueryDlg(nStr, sAsk) then Exit;
-            end;
+            nStr := nStr + #13#10#13#10 + '是否继续保存?';
+            nStr := Format(nStr, [FTruck, FInnerData.FValue, nNet, nVal]);
+            if not QueryDlg(nStr, sAsk) then Exit;
           end;
+          {$ELSE}
+          nStr := '车辆[ %s ]实际装车量误差较大,详情如下:' + #13#10 +
+                  '※.开单量: %.2f吨' + #13#10 +
+                  '※.装车量: %.2f吨' + #13#10 +
+                  '※.误差量: %.2f公斤' + #13#10 +
+                  '检测完毕后,请点确认重新过磅.';
+          nStr := Format(nStr, [FTruck, FInnerData.FValue, nNet, nVal]);
+
+          if not VerifyManualEventRecord(FID + sFlag_ManualC, nStr) then
+          begin
+            AddManualEventRecord(FID + sFlag_ManualC, FTruck, nStr,
+              sFlag_DepBangFang, sFlag_Solution_YN, sFlag_DepJianZhuang, True);
+            WriteSysLog(nStr);
+
+            nStr := '车辆[n1]%s净重[n2]%.2f吨,开票量[n2]%.2f吨,'+
+                    '误差量[n2]%.2f公斤,请去包装点包';
+            nStr := Format(nStr, [FTruck, nNet, FInnerData.FValue, nVal]);
+            PlayVoice(nStr);
+
+            nStr := GetTruckNO(FTruck) + '请去包装点包';
+            LEDDisplay(nStr);
+
+            {$IFDEF ProberShow}
+              {$IFDEF MITTruckProber}
+              ProberShowTxt(FPoundTunnel.FID, nStr);
+              {$ELSE}
+              gProberManager.ShowTxt(FPoundTunnel.FID, nStr);
+              {$ENDIF}
+            {$ENDIF}
+            Exit;
+          end;
+          {$ENDIF}
         end;
 
         if (FType = sFlag_San) and IsStrictSanValue and
@@ -738,8 +800,8 @@ begin
                   Float2Float(FValue, cPrecision, True)]);
           WriteSysLog(nStr);
           PlayVoice(nStr);
-          Exit;        
-        end;  
+          Exit;
+        end;
       end;
     end
     else
@@ -749,23 +811,12 @@ begin
 
       if (nNet > 0) and (Abs(nVal) > gSysParam.FEmpTruckWc) then
       begin
-        nStr := '车辆[%s]实时皮重误差较大,请司机联系司磅管理员检查车厢';
-        nStr := Format(nStr, [FUIData.FTruck]);
-//        nDaiWc:=nStr;
-
+        nVal := nVal - gSysParam.FEmpTruckWc;
+        nStr := '车辆[n1]%s[p500]空车出厂超差[n2]%.2f公斤,请司机联系司磅管理员检查车厢';
+        nStr := Format(nStr, [FBillItems[0].FTruck, Float2Float(nVal, cPrecision, True)]);
+        WriteSysLog(nStr);
         PlayVoice(nStr);
-        nStr := '车辆[ %s ]实时皮重误差较大,详情如下:' + #13#10#13#10 +
-                '※.实时皮重: %.2f吨' + #13#10 +
-                '※.历史皮重: %.2f吨' + #13#10 +
-                '※.误差量: %.2f公斤' + #13#10#13#10 +
-                '是否继续保存?';
-        nStr := Format(nStr, [FUIData.FTruck, nNet,
-                       FUIData.FPData.FValue, nVal]);
-        if not QueryDlg(nStr, sAsk) then
-        begin
-          Result:=True;
-          Exit;
-        end;
+        Exit;
       end;
     end;
   end;
@@ -791,7 +842,8 @@ begin
 
     FPoundID := sFlag_Yes;
     //标记该项有称重数据
-    Result := SaveLadingBills(FNextStatus, FBillItems, FPoundTunnel);
+    FSaveResult := SaveLadingBills(FNextStatus, FBillItems, FPoundTunnel, FLogin);
+    Result := FSaveResult;
     //保存称重
   end;
 end;
@@ -809,7 +861,6 @@ begin
     if FUIData.FPData.FValue > FUIData.FMData.FValue then
     begin
       WriteLog('皮重应小于毛重');
-      PlayVoice('皮重应小于毛重');
       Exit;
     end;
   end;
@@ -820,22 +871,21 @@ begin
   SetLength(FBillItems, 1);
   FBillItems[0] := FUIData;
   //复制用户界面数据
-  
+
   with FBillItems[0] do
   begin
     FFactory := gSysParam.FFactNum;
     //xxxxx
-    
+
     if FNextStatus = sFlag_TruckBFP then
          FPData.FStation := FPoundTunnel.FID
     else FMData.FStation := FPoundTunnel.FID;
   end;
-
+  
   if FCardUsed = sFlag_Provide then
-       Result := SavePurchaseOrders(nNextStatus, FBillItems,FPoundTunnel)
-  else Result := SaveDuanDaoItems(nNextStatus, FBillItems, FPoundTunnel);
+       Result := SavePurchaseOrders(nNextStatus, FBillItems,FPoundTunnel, FLogin)
+  else Result := SaveDuanDaoItems(nNextStatus, FBillItems, FPoundTunnel, FLogin);
   //保存称重
-
   //Result := SavePurchaseOrders(nNextStatus, FBillItems,FPoundTunnel)
   //保存称重
 end;
@@ -915,6 +965,8 @@ begin
   if Length(FBillItems) < 1 then Exit;
   //无称重数据
 
+  //if FCardUsed = sFlag_Provide then
+  //临时过磅也对调重量
   if FCardUsed <> sFlag_Sale then
   begin
     if FInnerData.FPData.FValue > 0 then
@@ -951,14 +1003,20 @@ begin
     {$IFDEF HR1847}
     if not gKRMgrProber.IsTunnelOK(FPoundTunnel.FID) then
     {$ELSE}
-    if not gProberManager.IsTunnelOK(FPoundTunnel.FID) then
+      {$IFNDEF TruckProberEx}
+      if not gProberManager.IsTunnelOK(FPoundTunnel.FID) then
+      {$ELSE}
+      if not gProberManager.IsTunnelOKEx(FPoundTunnel.FID) then
+      {$ENDIF}
     {$ENDIF}
   {$ENDIF}
   begin
-    PlayVoice('车辆未停到位,请移动车辆.');
-    InitSamples;
+    nStr := '车辆未停到位,请移动车辆.';
+    PlayVoice(nStr);
+    LEDDisplay(nStr);
+    WriteSysLog(nStr);
 
-    LEDDisplay('车辆未停到位,请移动车辆.');
+    InitSamples;
     Exit;
   end;
 
@@ -966,20 +1024,49 @@ begin
 //  if FCardUsed = sFlag_Provide then
 //       nRet := SavePoundData
 //  else nRet := SavePoundSale;
+
   if FCardUsed = sFlag_Sale then
        nRet := SavePoundSale
   else nRet := SavePoundData;
 
   if nRet then
   begin
-    nStr := GetTruckNO(FUIData.FTruck) + '重量  ' + GetValue(nValue);
+    if (FCardUsed = sFlag_Sale) and (FBillItems[0].FType = sFlag_Dai)
+       and (FBillItems[0].FNextStatus = sFlag_TruckBFM) then
+      nStr := GetTruckNO(FUIData.FTruck) + '票重:' +
+              GetValue(StrToFloatDef(EditZValue.Text,0))
+    else
+      nStr := GetTruckNO(FUIData.FTruck) + '重量:' + GetValue(nValue);
     LEDDisplay(nStr);
-    
+
+    {$IFDEF ProberShow}
+      {$IFDEF MITTruckProber}
+      ProberShowTxt(FPoundTunnel.FID, nStr);
+      {$ELSE}
+      gProberManager.ShowTxt(FPoundTunnel.FID, nStr);
+      {$ENDIF}
+    {$ENDIF}
+
     TimerDelay.Enabled := True
   end
-  else Timer_SaveFail.Enabled := True;
+  else
+  begin
+    if not FSaveResult then
+    begin
+      nStr := GetTruckNO(FUIData.FTruck) + '数据保存失败';
+      {$IFDEF MITTruckProber}
+      ProberShowTxt(FPoundTunnel.FID, nStr);
+      {$ELSE}
+      gProberManager.ShowTxt(FPoundTunnel.FID, nStr);
+      {$ENDIF}
+      nStr := '数据保存失败,请重新过磅.';
+      PlayVoice(nStr);
+    end;
 
-  if FBarrierGate then
+    Timer_SaveFail.Enabled := True;
+  end;
+
+  if FBarrierGate and FSaveResult then
     OpenDoorByReader(FLastReader, sFlag_No);
   //打开副道闸
 end;
@@ -1119,12 +1206,18 @@ begin
   end;
 end;
 
-procedure TfFrameAutoPoundItem.LEDDisplay(const nStrtext: string);
+procedure TfFrameAutoPoundItem.LEDDisplay(const nContent: string);
 begin
-  WriteSysLog(Format('LEDDisplay:%s.%s', [FPoundTunnel.FID, nStrtext]));
+  {$IFDEF BFLED}
+  WriteSysLog(Format('LEDDisplay:%s.%s', [FPoundTunnel.FID, nContent]));
   if Assigned(FPoundTunnel.FOptions) And
      (UpperCase(FPoundTunnel.FOptions.Values['LEDEnable'])='Y') then
-    gDisplayManager.Display(FPoundTunnel.FID, nStrtext);
+  begin
+    if FLEDContent = nContent then Exit;
+    FLEDContent := nContent;
+    gDisplayManager.Display(FPoundTunnel.FID, nContent);
+  end;
+  {$ENDIF}
 end;
 
 end.

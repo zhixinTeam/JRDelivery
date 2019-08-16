@@ -17,7 +17,7 @@ function GetLocalIPConfig(var nName,nIP: string): Boolean;
 implementation
 
 //Desc: 获取nLana节点的MAC地址
-function GetAdapterInfo(const nLana: Char): String;
+function GetAdapterInfo(const nLana: AnsiChar): String;
 var nNCB: TNCB;
     nAdapter: TAdapterStatus;
 begin
@@ -67,7 +67,7 @@ end;
 
 //Desc: 获取本机名称
 function GetLocalIPConfig(var nName,nIP: string): Boolean;
-var nP: PChar;
+var nP: PAnsiChar;
     nVer: WORD;
     nEnt: PHostEnt;
     nData: TWSAData;

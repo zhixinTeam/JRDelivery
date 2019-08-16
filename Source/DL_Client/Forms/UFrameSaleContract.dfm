@@ -35,9 +35,6 @@ inherited fFrameSaleContract: TfFrameSaleContract
           Kind = bkEllipsis
         end>
       Properties.OnButtonClick = EditIDPropertiesButtonClick
-      Style.BorderColor = clWindowFrame
-      Style.BorderStyle = ebsSingle
-      Style.ButtonStyle = btsHotFlat
       TabOrder = 0
       OnKeyPress = OnCtrlKeyPress
       Width = 125
@@ -52,9 +49,6 @@ inherited fFrameSaleContract: TfFrameSaleContract
           Kind = bkEllipsis
         end>
       Properties.OnButtonClick = EditIDPropertiesButtonClick
-      Style.BorderColor = clWindowFrame
-      Style.BorderStyle = ebsSingle
-      Style.ButtonStyle = btsHotFlat
       TabOrder = 1
       OnKeyPress = OnCtrlKeyPress
       Width = 125
@@ -64,8 +58,6 @@ inherited fFrameSaleContract: TfFrameSaleContract
       Top = 93
       Hint = 'T.C_ID'
       ParentFont = False
-      Style.BorderColor = clWindowFrame
-      Style.BorderStyle = ebsSingle
       TabOrder = 3
       Width = 125
     end
@@ -74,8 +66,6 @@ inherited fFrameSaleContract: TfFrameSaleContract
       Top = 93
       Hint = 'T.Cus_Name'
       ParentFont = False
-      Style.BorderColor = clWindowFrame
-      Style.BorderStyle = ebsSingle
       TabOrder = 4
       Width = 125
     end
@@ -84,8 +74,6 @@ inherited fFrameSaleContract: TfFrameSaleContract
       Top = 93
       Hint = 'T.S_Name'
       ParentFont = False
-      Style.BorderColor = clWindowFrame
-      Style.BorderStyle = ebsSingle
       TabOrder = 5
       Width = 125
     end
@@ -94,8 +82,6 @@ inherited fFrameSaleContract: TfFrameSaleContract
       Top = 93
       Hint = 'T.C_Project'
       ParentFont = False
-      Style.BorderColor = clWindowFrame
-      Style.BorderStyle = ebsSingle
       TabOrder = 6
       Width = 121
     end
@@ -109,9 +95,6 @@ inherited fFrameSaleContract: TfFrameSaleContract
           Kind = bkEllipsis
         end>
       Properties.OnButtonClick = EditIDPropertiesButtonClick
-      Style.BorderColor = clWindowFrame
-      Style.BorderStyle = ebsSingle
-      Style.ButtonStyle = btsHotFlat
       TabOrder = 2
       OnKeyPress = OnCtrlKeyPress
       Width = 125
@@ -119,40 +102,41 @@ inherited fFrameSaleContract: TfFrameSaleContract
     inherited dxGroup1: TdxLayoutGroup
       inherited GroupSearch1: TdxLayoutGroup
         object dxLayout1Item1: TdxLayoutItem
-          CaptionOptions.Text = #21512#21516#32534#21495':'
+          Caption = #21512#21516#32534#21495':'
           Control = EditID
           ControlOptions.ShowBorder = False
         end
         object dxLayout1Item2: TdxLayoutItem
-          CaptionOptions.Text = #23458#25143#21517#31216':'
+          Caption = #23458#25143#21517#31216':'
           Control = EditName
           ControlOptions.ShowBorder = False
         end
         object dxLayout1Item7: TdxLayoutItem
-          CaptionOptions.Text = #19994#21153#21592':'
+          Caption = #19994#21153#21592':'
           Control = EditCustomer
           ControlOptions.ShowBorder = False
         end
       end
       inherited GroupDetail1: TdxLayoutGroup
         object dxLayout1Item3: TdxLayoutItem
-          CaptionOptions.Text = #21512#21516#32534#21495':'
+          Caption = #21512#21516#32534#21495':'
           Control = cxTextEdit1
           ControlOptions.ShowBorder = False
         end
         object dxLayout1Item4: TdxLayoutItem
-          CaptionOptions.Text = #23458#25143#21517#31216':'
+          Caption = #23458#25143#21517#31216':'
           Control = cxTextEdit2
           ControlOptions.ShowBorder = False
         end
         object dxLayout1Item6: TdxLayoutItem
-          CaptionOptions.Text = #19994#21153#21592':'
+          Caption = #19994#21153#21592':'
           Control = cxTextEdit4
           ControlOptions.ShowBorder = False
         end
         object dxLayout1Item5: TdxLayoutItem
+          AutoAligns = [aaVertical]
           AlignHorz = ahClient
-          CaptionOptions.Text = #24037#31243#21517#31216':'
+          Caption = #24037#31243#21517#31216':'
           Control = cxTextEdit3
           ControlOptions.ShowBorder = False
         end

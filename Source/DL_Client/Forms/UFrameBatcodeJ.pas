@@ -14,7 +14,7 @@ uses
   cxMaskEdit, cxButtonEdit, cxTextEdit, ADODB, cxLabel, UBitmapPanel,
   cxSplitter, cxGridLevel, cxClasses, cxGridCustomView,
   cxGridCustomTableView, cxGridTableView, cxGridDBTableView, cxGrid,
-  ComCtrls, ToolWin, dxLayoutcxEditAdapters;
+  ComCtrls, ToolWin;
 
 type
   TfFrameBatcode = class(TfFrameNormal)
@@ -134,12 +134,8 @@ begin
   if cxView1.DataController.GetSelectedCount > 0 then
   begin
     nCode := SQLQuery.FieldByName('B_Batcode').AsString;
-    {$IFDEF BatchInHYOfBill}
-      nSQL := 'Select Sum(L_Value) From %s Where L_HYDan=''%s''';
-    {$ELSE}
-      nSQL := 'Select Sum(L_Value) From %s Where L_Seal=''%s''';
-    {$ENDIF}
 
+    nSQL := 'Select Sum(L_Value) From %s Where L_HYDan=''%s''';
     nSQL := Format(nSQL, [sTable_Bill, nCode]);
     with FDM.QuerySQL(nSQL) do
     if RecordCount > 0 then

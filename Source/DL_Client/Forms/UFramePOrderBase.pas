@@ -161,6 +161,7 @@ end;
 //Desc: 删除
 procedure TfFramePOrderBase.BtnDelClick(Sender: TObject);
 var nStr: string;
+    nP: TFormCommandParam;
 begin
   if cxView1.DataController.GetSelectedCount < 1 then
   begin
@@ -169,6 +170,28 @@ begin
 
   nStr := SQLQuery.FieldByName('B_ID').AsString;
   if not QueryDlg('确定要删除编号为[ ' + nStr + ' ]的申请单吗?', sAsk) then Exit;
+
+  {$IFDEF ForceMemo}
+  with nP do
+  begin
+    nStr := SQLQuery.FieldByName('B_ID').AsString;
+    nStr := Format('请填写删除[ %s ]单据的原因', [nStr]);
+
+    FCommand := cCmd_EditData;
+    FParamA := nStr;
+    FParamB := 320;
+    FParamD := 2;
+
+    nStr := SQLQuery.FieldByName('R_ID').AsString;
+    FParamC := 'Update %s Set B_Memo=''$Memo'' Where R_ID=%s';
+    FParamC := Format(FParamC, [sTable_OrderBase, nStr]);
+
+    CreateBaseFormItem(cFI_FormMemo, '', @nP);
+    if (FCommand <> cCmd_ModalResult) or (FParamA <> mrOK) then Exit;
+  end;
+  {$ENDIF}
+
+  nStr := SQLQuery.FieldByName('B_ID').AsString;
 
   if DeleteOrderBase(nStr) then ShowMsg('已成功删除记录', sHint);
 

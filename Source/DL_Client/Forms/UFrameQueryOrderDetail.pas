@@ -4,6 +4,7 @@
 *******************************************************************************}
 unit UFrameQueryOrderDetail;
 
+{$I Link.inc}
 interface
 
 uses
@@ -14,7 +15,7 @@ uses
   cxMaskEdit, cxButtonEdit, cxTextEdit, ADODB, cxLabel, UBitmapPanel,
   cxSplitter, cxGridLevel, cxClasses, cxGridCustomView,
   cxGridCustomTableView, cxGridTableView, cxGridDBTableView, cxGrid,
-  ComCtrls, ToolWin, dxLayoutcxEditAdapters;
+  ComCtrls, ToolWin;
 
 type
   TfFrameOrderDetailQuery = class(TfFrameNormal)
@@ -39,6 +40,8 @@ type
     N1: TMenuItem;
     N2: TMenuItem;
     N3: TMenuItem;
+    N4: TMenuItem;
+    N5: TMenuItem;
     procedure EditDatePropertiesButtonClick(Sender: TObject;
       AButtonIndex: Integer);
     procedure EditTruckPropertiesButtonClick(Sender: TObject;
@@ -46,6 +49,7 @@ type
     procedure mniN1Click(Sender: TObject);
     procedure N2Click(Sender: TObject);
     procedure N3Click(Sender: TObject);
+    procedure N5Click(Sender: TObject);
   private
     { Private declarations }
   protected
@@ -53,11 +57,13 @@ type
     FTimeS,FTimeE: TDate;
     //时间区间
     FJBWhere: string;
-    //交班条件 
+    //交班条件
     procedure OnCreateFrame; override;
     procedure OnDestroyFrame; override;
     function InitFormDataSQL(const nWhere: string): string; override;
     //查询SQL
+    function GetVal(const nRow: Integer; const nField: string): string;
+    //获取指定字段
   public
     { Public declarations }
     class function FrameID: integer; override;
@@ -93,8 +99,12 @@ end;
 
 function TfFrameOrderDetailQuery.InitFormDataSQL(const nWhere: string): string;
 begin
+  {$IFDEF SpecialControl}
+  MakeOrderViewData;
+  {$ENDIF}
+
   EditDate.Text := Format('%s 至 %s', [Date2Str(FStart), Date2Str(FEnd)]);
-  Result := 'Select *,(D_MValue-D_PValue-isnull(D_KZValue,0)) as D_NetWeight ' +
+  Result := 'Select *,(D_MValue-D_PValue-D_KZValue) as D_NetWeight ' +
             'From $OD od Inner Join $OO oo on od.D_OID=oo.O_ID ';
   //xxxxxx
 
@@ -202,6 +212,49 @@ begin
   end;
 
   N2.Click;
+end;
+
+procedure TfFrameOrderDetailQuery.N5Click(Sender: TObject);
+var nStr: string;
+    nIdx: Integer;
+    nList: TStrings;
+begin
+  if cxView1.DataController.GetSelectedCount < 1 then
+  begin
+    ShowMsg('请选择要编辑的记录', sHint); Exit;
+  end;
+
+  nList := TStringList.Create;
+  try
+    for nIdx := 0 to cxView1.DataController.RowCount - 1  do
+    begin
+
+      nStr := GetVal(nIdx,'D_ID');
+      if nStr = '' then
+        Continue;
+
+      nList.Add(nStr);
+    end;
+
+    nStr := AdjustListStrFormat2(nList, '''', True, ',', False);
+    PrintOrderReport(nStr, False, True);
+  finally
+    nList.Free;
+  end;
+end;
+
+//Desc: 获取nRow行nField字段的内容
+function TfFrameOrderDetailQuery.GetVal(const nRow: Integer;
+ const nField: string): string;
+var nVal: Variant;
+begin
+  nVal := cxView1.ViewData.Rows[nRow].Values[
+            cxView1.GetColumnByFieldName(nField).Index];
+  //xxxxx
+
+  if VarIsNull(nVal) then
+       Result := ''
+  else Result := nVal;
 end;
 
 initialization

@@ -59,8 +59,6 @@ inherited fFrameOrderDetail: TfFrameOrderDetail
       Top = 93
       Hint = 'T.O_ProName'
       ParentFont = False
-      Style.BorderColor = clWindowFrame
-      Style.BorderStyle = ebsSingle
       TabOrder = 7
       Width = 105
     end
@@ -75,9 +73,6 @@ inherited fFrameOrderDetail: TfFrameOrderDetail
         end>
       Properties.ReadOnly = True
       Properties.OnButtonClick = EditDatePropertiesButtonClick
-      Style.BorderColor = clWindowFrame
-      Style.BorderStyle = ebsSingle
-      Style.ButtonStyle = btsHotFlat
       TabOrder = 3
       Width = 185
     end
@@ -91,9 +86,6 @@ inherited fFrameOrderDetail: TfFrameOrderDetail
           Kind = bkEllipsis
         end>
       Properties.OnButtonClick = EditTruckPropertiesButtonClick
-      Style.BorderColor = clWindowFrame
-      Style.BorderStyle = ebsSingle
-      Style.ButtonStyle = btsHotFlat
       TabOrder = 2
       OnKeyPress = OnCtrlKeyPress
       Width = 115
@@ -103,8 +95,6 @@ inherited fFrameOrderDetail: TfFrameOrderDetail
       Top = 93
       Hint = 'T.D_NetWeight'
       ParentFont = False
-      Style.BorderColor = clWindowFrame
-      Style.BorderStyle = ebsSingle
       TabOrder = 6
       Width = 115
     end
@@ -113,8 +103,6 @@ inherited fFrameOrderDetail: TfFrameOrderDetail
       Top = 93
       Hint = 'T.D_ID'
       ParentFont = False
-      Style.BorderColor = clWindowFrame
-      Style.BorderStyle = ebsSingle
       TabOrder = 4
       Width = 115
     end
@@ -123,8 +111,6 @@ inherited fFrameOrderDetail: TfFrameOrderDetail
       Top = 93
       Hint = 'T.O_StockName'
       ParentFont = False
-      Style.BorderColor = clWindowFrame
-      Style.BorderStyle = ebsSingle
       TabOrder = 5
       Width = 115
     end
@@ -138,9 +124,6 @@ inherited fFrameOrderDetail: TfFrameOrderDetail
           Kind = bkEllipsis
         end>
       Properties.OnButtonClick = EditTruckPropertiesButtonClick
-      Style.BorderColor = clWindowFrame
-      Style.BorderStyle = ebsSingle
-      Style.ButtonStyle = btsHotFlat
       TabOrder = 1
       OnKeyPress = OnCtrlKeyPress
       Width = 115
@@ -155,9 +138,6 @@ inherited fFrameOrderDetail: TfFrameOrderDetail
           Kind = bkEllipsis
         end>
       Properties.OnButtonClick = EditTruckPropertiesButtonClick
-      Style.BorderColor = clWindowFrame
-      Style.BorderStyle = ebsSingle
-      Style.ButtonStyle = btsHotFlat
       TabOrder = 0
       OnKeyPress = OnCtrlKeyPress
       Width = 115
@@ -165,45 +145,46 @@ inherited fFrameOrderDetail: TfFrameOrderDetail
     inherited dxGroup1: TdxLayoutGroup
       inherited GroupSearch1: TdxLayoutGroup
         object dxLayout1Item7: TdxLayoutItem
-          CaptionOptions.Text = #27966#36710#21333#21495':'
+          Caption = #27966#36710#21333#21495':'
           Control = EditBill
           ControlOptions.ShowBorder = False
         end
         object dxLayout1Item4: TdxLayoutItem
-          CaptionOptions.Text = #36710#29260#21495#30721':'
+          Caption = #36710#29260#21495#30721':'
           Control = EditTruck
           ControlOptions.ShowBorder = False
         end
         object dxLayout1Item8: TdxLayoutItem
-          CaptionOptions.Text = #20379' '#24212' '#21830':'
+          Caption = #20379' '#24212' '#21830':'
           Control = EditCustomer
           ControlOptions.ShowBorder = False
         end
         object dxLayout1Item6: TdxLayoutItem
-          CaptionOptions.Text = #26085#26399#31579#36873':'
+          Caption = #26085#26399#31579#36873':'
           Control = EditDate
           ControlOptions.ShowBorder = False
         end
       end
       inherited GroupDetail1: TdxLayoutGroup
         object dxLayout1Item2: TdxLayoutItem
-          CaptionOptions.Text = #27966#36710#21333#21495':'
+          Caption = #27966#36710#21333#21495':'
           Control = cxtxtdt3
           ControlOptions.ShowBorder = False
         end
         object dxLayout1Item3: TdxLayoutItem
-          CaptionOptions.Text = #21697#31181#21517#31216':'
+          Caption = #21697#31181#21517#31216':'
           Control = cxtxtdt4
           ControlOptions.ShowBorder = False
         end
         object dxLayout1Item1: TdxLayoutItem
-          CaptionOptions.Text = #20132#36135#37327'('#21544'):'
+          Caption = #20132#36135#37327'('#21544'):'
           Control = cxtxtdt2
           ControlOptions.ShowBorder = False
         end
         object dxLayout1Item5: TdxLayoutItem
+          AutoAligns = [aaVertical]
           AlignHorz = ahClient
-          CaptionOptions.Text = #20379' '#24212' '#21830':'
+          Caption = #20379' '#24212' '#21830':'
           Control = cxtxtdt1
           ControlOptions.ShowBorder = False
         end

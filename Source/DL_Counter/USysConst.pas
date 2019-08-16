@@ -25,6 +25,7 @@ type
     FLocalMAC   : string;                            //本机MAC
     FLocalName  : string;                            //本机名称
     FHardMonURL : string;                            //硬件守护
+    FWechatURL  : string;                            //微信业务
 
     FIsEncode   : Boolean;                           //是否需要密码启动
   end;
@@ -394,8 +395,7 @@ end;
 //Parm: 通道号;交货单;提示
 //Desc: 向nTunnel的喷码机发送打印nBill请求
 function PrintBillCode(const nTunnel,nBill: string; var nHint: string): Boolean;
-var nList: TStrings;
-    nIn: TWorkerBusinessCommand;
+var nIn: TWorkerBusinessCommand;
     nOut: TWorkerBusinessCommand;
     nWorker: TBusinessWorkerBase;
 begin

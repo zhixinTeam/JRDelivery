@@ -3,51 +3,51 @@ inherited fFormProvider: TfFormProvider
   Top = 319
   BorderIcons = [biSystemMenu, biMinimize]
   BorderStyle = bsSingle
-  ClientHeight = 500
-  ClientWidth = 465
+  ClientHeight = 400
+  ClientWidth = 372
   OldCreateOrder = True
   OnClose = FormClose
   OnCreate = FormCreate
   OnKeyDown = FormKeyDown
-  PixelsPerInch = 120
-  TextHeight = 15
+  PixelsPerInch = 96
+  TextHeight = 12
   object dxLayoutControl1: TdxLayoutControl
     Left = 0
     Top = 0
-    Width = 465
-    Height = 500
+    Width = 372
+    Height = 400
     Align = alClient
     TabOrder = 0
     TabStop = False
     AutoContentSizes = [acsWidth, acsHeight]
     LookAndFeel = FDM.dxLayoutWeb1
     object EditName: TcxTextEdit
-      Left = 87
-      Top = 73
+      Left = 81
+      Top = 61
       Hint = 'T.P_Name'
       ParentFont = False
       Properties.MaxLength = 80
       TabOrder = 1
       OnKeyDown = FormKeyDown
-      Width = 173
+      Width = 138
     end
     object EditMemo: TcxMemo
-      Left = 87
-      Top = 129
+      Left = 81
+      Top = 111
       Hint = 'T.P_Memo'
       ParentFont = False
       Properties.MaxLength = 50
       Properties.ScrollBars = ssVertical
       Style.Edges = [bBottom]
-      TabOrder = 4
-      Height = 62
-      Width = 460
+      TabOrder = 3
+      Height = 50
+      Width = 368
     end
     object InfoList1: TcxMCListBox
-      Left = 29
-      Top = 292
-      Width = 496
-      Height = 131
+      Left = 23
+      Top = 248
+      Width = 397
+      Height = 104
       HeaderSections = <
         item
           Text = #20449#24687#39033
@@ -56,86 +56,86 @@ inherited fFormProvider: TfFormProvider
         item
           AutoSize = True
           Text = #20869#23481
-          Width = 387
+          Width = 288
         end>
       ParentFont = False
       Style.BorderStyle = cbsOffice11
       Style.Edges = [bLeft, bTop, bRight, bBottom]
-      TabOrder = 9
+      TabOrder = 8
     end
     object InfoItems: TcxComboBox
-      Left = 87
-      Top = 236
+      Left = 81
+      Top = 198
       ParentFont = False
       Properties.ImmediateDropDown = False
       Properties.IncrementalSearch = False
       Properties.MaxLength = 30
-      TabOrder = 5
-      Width = 94
+      TabOrder = 4
+      Width = 75
     end
     object EditInfo: TcxTextEdit
-      Left = 87
-      Top = 264
+      Left = 81
+      Top = 223
       ParentFont = False
       Properties.MaxLength = 50
-      TabOrder = 7
-      Width = 113
+      TabOrder = 6
+      Width = 90
     end
     object BtnAdd: TButton
-      Left = 380
-      Top = 236
-      Width = 56
-      Height = 22
+      Left = 304
+      Top = 198
+      Width = 45
+      Height = 17
       Caption = #28155#21152
-      TabOrder = 6
+      TabOrder = 5
       OnClick = BtnAddClick
     end
     object BtnDel: TButton
-      Left = 380
-      Top = 264
-      Width = 56
-      Height = 22
+      Left = 304
+      Top = 223
+      Width = 45
+      Height = 18
       Caption = #21024#38500
-      TabOrder = 8
+      TabOrder = 7
       OnClick = BtnDelClick
     end
     object BtnOK: TButton
-      Left = 272
-      Top = 458
-      Width = 87
-      Height = 28
+      Left = 217
+      Top = 366
+      Width = 69
+      Height = 23
       Caption = #20445#23384
-      TabOrder = 10
+      TabOrder = 9
       OnClick = BtnOKClick
     end
     object BtnExit: TButton
-      Left = 364
-      Top = 458
-      Width = 87
-      Height = 28
+      Left = 291
+      Top = 366
+      Width = 70
+      Height = 23
       Caption = #21462#28040
-      TabOrder = 11
+      TabOrder = 10
       OnClick = BtnExitClick
     end
     object cxTextEdit3: TcxTextEdit
-      Left = 282
-      Top = 101
+      Left = 81
+      Top = 86
       Hint = 'T.P_Phone'
       ParentFont = False
       Properties.MaxLength = 20
-      TabOrder = 3
+      TabOrder = 2
       OnKeyDown = FormKeyDown
-      Width = 182
+      Width = 145
     end
     object EditID: TcxTextEdit
-      Left = 87
-      Top = 45
+      Left = 81
+      Top = 36
       Hint = 'T.P_ID'
       ParentFont = False
       Properties.MaxLength = 80
       TabOrder = 0
       OnKeyDown = FormKeyDown
-      Width = 348
+      Width = 278
     end
     object dxLayoutControl1Group_Root: TdxLayoutGroup
       ShowCaption = False

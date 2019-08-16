@@ -40,11 +40,13 @@ type
     procedure N3Click(Sender: TObject);
   private
     { Private declarations }
-    function AddMallUser(const nBindcustomerid,nprov_num,nprov_name:string):Boolean;
-    function DelMallUser(const nNamepinyin,nprov_num:string):Boolean;
+    FListA: TStrings;
   protected
     function InitFormDataSQL(const nWhere: string): string; override;
     {*查询SQL*}
+    procedure OnCreateFrame; override;
+    procedure OnDestroyFrame; override;
+    //创建释放
   public
     { Public declarations }
     class function FrameID: integer; override;
@@ -55,11 +57,23 @@ implementation
 {$R *.dfm}
 uses
   ULibFun, UMgrControl, USysConst, USysDB, UDataModule, UFormBase, USysBusiness,
-  UBusinessPacker,USysLoger;
+  UBusinessPacker;
 
 class function TfFrameProvider.FrameID: integer;
 begin
   Result := cFI_FrameProvider;
+end;
+
+procedure TfFrameProvider.OnCreateFrame;
+begin
+  inherited;
+  FListA := TStringList.Create;
+end;
+
+procedure TfFrameProvider.OnDestroyFrame;
+begin
+  FListA.Free;
+  inherited;
 end;
 
 function TfFrameProvider.InitFormDataSQL(const nWhere: string): string;
@@ -145,13 +159,21 @@ begin
   {$IFDEF SyncRemote}
   N1.Visible := True;
   {$ENDIF}
+
+  {$IFDEF MicroMsg}
+  N2.Enabled := BtnEdit.Enabled;
+  N3.Enabled := BtnEdit.Enabled;
+  {$ELSE}
+  N2.Visible := False;
+  N3.Visible := False;
+  {$ENDIF}
 end;
 
 procedure TfFrameProvider.N2Click(Sender: TObject);
 var
   nWechartAccount:string;
   nParam: TFormCommandParam;
-  nPID,nPName:string;
+  nPID,nPName,nPhone:string;
   nBindcustomerid:string;
   nStr:string;
 begin
@@ -167,96 +189,41 @@ begin
     Exit;
   end;
   nParam.FCommand := cCmd_AddData;
-  CreateBaseFormItem(cFI_FormGetWechartAccount, PopedomItem, @nParam);
-  if (nParam.FCommand = cCmd_ModalResult) and (nParam.FParamA = mrOK) then
-  begin
-    nBindcustomerid := PackerDecodeStr(nParam.FParamB);
-    nWechartAccount := PackerDecodeStr(nParam.FParamC);
-    nPID := SQLQuery.FieldByName('P_ID').AsString;
-    nPName := SQLQuery.FieldByName('P_Name').AsString;
-    if not AddMallUser(nBindcustomerid,nPID,nPName) then Exit;
+  CreateBaseFormItem(cFI_FormGetWXAccount, PopedomItem, @nParam);
 
-    nStr := 'update %s set P_WechartAccount=''%s'' where P_ID=''%s''';
-    nStr := Format(nStr,[sTable_Provider,nWechartAccount,nPID]);
-    FDM.ADOConn.BeginTrans;
-    try
-      FDM.ExecuteSQL(nStr);
-      FDM.ADOConn.CommitTrans;
-      ShowMsg('供应商 [ '+nPName+' ] 关联商城账户成功！',sHint);
-      InitFormData(FWhere);
-    except
-      FDM.ADOConn.RollbackTrans;
-      ShowMsg('关联商城账户失败', '未知错误');
-    end;
-  end;  
-end;
+  if (nParam.FCommand <> cCmd_ModalResult) or (nParam.FParamA <> mrOK) then Exit;
 
-function TfFrameProvider.AddMallUser(const nBindcustomerid,nprov_num,nprov_name:string): Boolean;
-var
-  nXmlStr:string;
-  nData:string;
-  ntype:string;
-begin
-  Result := False;
-  ntype := 'add';
-  //发送绑定请求开户请求
-  nXmlStr := '<?xml version="1.0" encoding="UTF-8" ?>'
-            +'<DATA>'
-            +'<head>'
-            +'<Factory>%s</Factory>'
-            +'<Customer />'
-            +'<Provider>%s</Provider>'
-            +'<type>%s</type>'
-            +'</head>'
-            +'<Items>'
-            +'<Item>'
-            +'<providername>%s</providername>'
-            +'<cash>0</cash>'
-            +'<providernumber>%s</providernumber>'
-            +'</Item>'
-            +'</Items>'
-            +'<remark />'
-            +'</DATA>';
-  nXmlStr := Format(nXmlStr,[gSysParam.FFactory,nBindcustomerid,ntype,nprov_name,nprov_num]);
-  nXmlStr := PackerEncodeStr(nXmlStr);
-  nData := edit_shopclients(nXmlStr);
-  gSysLoger.AddLog(TfFrameProvider,'AddMallUser',nData);
-  if nData<>sFlag_Yes then
+  nBindcustomerid  := nParam.FParamB;
+  nWechartAccount  := nParam.FParamC;
+  nPhone           := nParam.FParamD;
+  nPID      := SQLQuery.FieldByName('P_ID').AsString;
+  nPName    := SQLQuery.FieldByName('P_Name').AsString;
+
+  with FListA do
   begin
-    ShowMsg('供应商[ '+nProv_num+' ]关联商城账户失败！', sError);
-    Exit;
+    Clear;
+    Values['Action']   := 'add';
+    Values['BindID']   := nBindcustomerid;
+    Values['Account']  := nWechartAccount;
+    Values['CusID']    := nPID;
+    Values['CusName']  := nPName;
+    Values['Memo']     := sFlag_Provide;
   end;
-  Result := True;
-end;
 
-function TfFrameProvider.DelMallUser(const nNamepinyin,nprov_num:string):Boolean;
-var
-  nXmlStr:string;
-  nData:string;
-begin
-  Result := False;
-  //发送http请求
-  nXmlStr := '<?xml version="1.0" encoding="UTF-8"?>'
-      +'<DATA>'
-      +'<head>'
-      +'<Factory>%s</Factory>'
-      +'<Provider>%s</Provider>'
-      +'<type>del</type>'
-      +'</head>'
-      +'<Items><Item>'
-      +'<providernumber>%s</providernumber>'
-      +'</Item></Items><remark/></DATA>';
-  nXmlStr := Format(nXmlStr,[gSysParam.FFactory,nNamepinyin,nprov_num]);
-
-  nXmlStr := PackerEncodeStr(nXmlStr);
-  nData := edit_shopclients(nXmlStr);
-  gSysLoger.AddLog(TfFrameProvider,'DelMallUser',nData);
-  if nData<>sFlag_Yes then
-  begin
-    ShowMsg('供应商[ '+nProv_num+' ]取消商城账户关联 失败！', sError);
-    Exit;
+  if edit_shopclients(PackerEncodeStr(FListA.Text)) <> sFlag_Yes then Exit;
+  //call remote
+  nStr := 'update %s set P_WechartAccount=''%s'',P_Phone=''%s'' where P_ID=''%s''';
+  nStr := Format(nStr,[sTable_Provider,nWechartAccount, nPhone, nPID]);
+  FDM.ADOConn.BeginTrans;
+  try
+    FDM.ExecuteSQL(nStr);
+    FDM.ADOConn.CommitTrans;
+    ShowMsg('供应商 [ '+nPName+' ] 关联商城账户成功！',sHint);
+    InitFormData(FWhere);
+  except
+    FDM.ADOConn.RollbackTrans;
+    ShowMsg('关联商城账户失败', '未知错误');
   end;
-  Result := True;
 end;
 
 procedure TfFrameProvider.N3Click(Sender: TObject);
@@ -274,16 +241,27 @@ begin
   nWechartAccount := SQLQuery.FieldByName('P_WechartAccount').AsString;
   if nWechartAccount='' then
   begin
-    ShowMsg('商城账户不已存在', sHint);
+    ShowMsg('商城账户不存在', sHint);
     Exit;
   end;
 
   nPID := SQLQuery.FieldByName('P_ID').AsString;
   nPName := SQLQuery.FieldByName('P_Name').AsString;
-  
-  if not DelMallUser(nWechartAccount,nPID) then Exit;
-  
-  nStr := 'update %s set P_WechartAccount='''' where P_ID=''%s''';
+
+  with FListA do
+  begin
+    Clear;
+    Values['Action']   := 'del';
+    Values['Account']  := nWechartAccount;
+    Values['CusID']    := nPID;
+    Values['CusName']  := nPName;
+    Values['Memo']     := sFlag_Provide;
+  end;
+
+  if edit_shopclients(PackerEncodeStr(FListA.Text)) <> sFlag_Yes then Exit;
+  //call remote
+
+  nStr := 'update %s set P_WechartAccount='''',P_Phone='''' where P_ID=''%s''';
   nStr := Format(nStr,[sTable_Provider,nPID]);
   FDM.ADOConn.BeginTrans;
   try

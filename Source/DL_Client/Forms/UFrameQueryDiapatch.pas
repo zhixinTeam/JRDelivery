@@ -40,6 +40,7 @@ type
     dxLayout1Item4: TdxLayoutItem;
     EditTruck: TcxButtonEdit;
     dxLayout1Item5: TdxLayoutItem;
+    N12: TMenuItem;
     procedure EditTruckPropertiesButtonClick(Sender: TObject;
       AButtonIndex: Integer);
     procedure N1Click(Sender: TObject);
@@ -48,6 +49,7 @@ type
     procedure N6Click(Sender: TObject);
     procedure N9Click(Sender: TObject);
     procedure N11Click(Sender: TObject);
+    procedure N12Click(Sender: TObject);
   private
     { Private declarations }
   protected
@@ -78,13 +80,17 @@ begin
   inherited;
   N1.Enabled := BtnAdd.Enabled;
   N2.Enabled := BtnEdit.Enabled;
+  {$IFDEF SpecialControl}
+  N3.Enabled := True;
+  {$ELSE}
   N3.Enabled := BtnEdit.Enabled;
+  {$ENDIF}
   N7.Enabled := BtnEdit.Enabled;
 end;
 
 function TfFrameQueryDispatch.InitFormDataSQL(const nWhere: string): string;
 begin
-  Result := ' Select zt.*,Z_Name,L_CusID,L_CusName,L_Status,L_Value ' +
+  Result := ' Select zt.*,Z_Name,L_CusID,L_CusName,L_Status,L_Value,L_LadeTime ' +
             'From $ZT zt ' +
             ' Left Join $ZL zl On zl.Z_ID=zt.T_Line ' +
             ' Left Join $Bill b On b.L_ID=zt.T_Bill ';
@@ -334,6 +340,39 @@ begin
     InitFormData(FWhere);
     ShowMsg('清理完毕', sHint);
   end;
+end;
+
+procedure TfFrameQueryDispatch.N12Click(Sender: TObject);
+var nStr,nLadeTime,nTmp: string;
+begin
+  if cxView1.DataController.GetSelectedCount < 1 then
+  begin
+    ShowMsg('请选择车辆', sHint);
+    Exit;
+  end;
+
+  nLadeTime := SQLQuery.FieldByName('L_LadeTime').AsString;
+
+  if nLadeTime = '' then
+  begin
+    ShowMsg('车辆还未刷卡', sHint);
+    Exit;
+  end;
+
+  nStr := '车辆刷卡时间为:[%s],确定要重置吗?';
+  nStr := Format(nStr, [nLadeTime]);
+
+  if not QueryDlg(nStr,sAsk) then Exit;
+
+  nLadeTime := FormatDateTime('yyyy-mm-dd hh:mm:ss.zzz', Now);
+
+  nStr := 'Update %s Set L_LadeTime=''%s'' Where L_ID=''%s''';
+  nStr := Format(nStr, [sTable_Bill, nLadeTime,
+          SQLQuery.FieldByName('T_Bill').AsString]);
+  FDM.ExecuteSQL(nStr);
+
+  ShowMsg('重置完毕', sHint);
+  InitFormData(FWhere);
 end;
 
 initialization

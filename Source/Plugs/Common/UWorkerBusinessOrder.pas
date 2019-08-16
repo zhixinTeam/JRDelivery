@@ -52,8 +52,7 @@ type
   end;
 
 implementation
-uses
-  UMgrWechatMsg, UHardBusiness;  
+
 class function TWorkerBusinessOrders.FunctionName: string;
 begin
   Result := sBus_BusinessPurchaseOrder;
@@ -315,16 +314,31 @@ var nStr: string;
     nIdx: Integer;
     nVal: Double;
     nOut: TWorkerBusinessCommand;
-    nWeborder:string;
 begin
   FListA.Text := PackerDecodeStr(FIn.FData);
   nVal := StrToFloat(FListA.Values['Value']);
-  nWeborder := FListA.Values['WebOrderID'];
   //unpack Order
 
   nStr := FListA.Values['Truck'];
   TWorkerBusinessCommander.CallMe(cBC_SaveTruckInfo,nStr, '',@nOut);
   //保存车牌号
+
+  {$IFDEF BusinessOnly}
+  nStr := 'Select R_ID,T_Bill,T_StockNo,T_Type,T_InFact,T_Valid From %s ' +
+          'Where T_Truck=''%s'' ';
+  nStr := Format(nStr, [sTable_ZTTrucks, FListA.Values['Truck']]);
+  //还在队列中车辆
+
+  with gDBConnManager.WorkerQuery(FDBConn, nStr) do
+  begin
+    if RecordCount > 0 then
+    begin
+      nStr := '车辆[ %s ]在未完成[ %s ]交货单之前禁止开单.';
+      nData := Format(nStr, [FListA.Values['Truck'], FieldByName('T_Bill').AsString]);
+      Exit;
+    end;
+  end;
+  {$ENDIF}
 
   //----------------------------------------------------------------------------
   FDBConn.FConn.BeginTrans;
@@ -364,8 +378,11 @@ begin
             SF('O_Type', sFlag_San),
             SF('O_StockNo', FListA.Values['StockNO']),
             SF('O_StockName', FListA.Values['StockName']),
-            SF('O_StockPrc', FListA.Values['StockPrc']),
 
+            {$IFDEF KuangFa}
+            SF('O_KFValue', FListA.Values['KFValue']),
+            SF('O_KFLS', FListA.Values['KFLS']),
+            {$ENDIF}
 
             SF('O_Truck', FListA.Values['Truck']),
             SF('O_Man', FIn.FBase.FFrom.FUser),
@@ -381,13 +398,6 @@ begin
       gDBConnManager.WorkerExec(FDBConn, nStr);
     end;
 
-    if Trim(FListA.Values['WebOrderID']) <> '' then
-    begin
-      nStr := 'insert into %s(WOM_WebOrderID,WOM_LID) values(''%s'',''%s'')';
-      nStr := Format(nStr,[sTable_WebOrderMatch,FListA.Values['WebOrderID'],nOut.FData]);
-      gDBConnManager.WorkerExec(FDBConn, nStr);
-    end;
-
     nIdx := Length(FOut.FData);
     if Copy(FOut.FData, nIdx, 1) = ',' then
       System.Delete(FOut.FData, nIdx, 1);
@@ -399,11 +409,6 @@ begin
     FDBConn.FConn.RollbackTrans;
     raise;
   end;
-  PustMsgToWeb(nOut.FData,gSysParam.FFactory,sFlag_Provide,sFlag_WebOrderStatus_ZK);
-//  try
-//    gWechatMsgManager.SendMsg(nOut.FData,gSysParam.FFactory,cSendWeChatMsgType_AddBill,sFlag_Provide,c_WeChatStatusCreateCard,nWeborder);
-//  except
-//  end;    
 end;
 
 //Date: 2015-8-5
@@ -464,7 +469,6 @@ begin
     FDBConn.FConn.RollbackTrans;
     raise;
   end;
-  PustMsgToWeb(FIn.FData,gSysParam.FFactory,sFlag_Provide,sFlag_WebOrderStatus_DL);
 end;
 
 //Date: 2014-09-17
@@ -930,6 +934,7 @@ begin
               SF('D_YMan', FIn.FBase.FFrom.FUser),
               SF('D_KZValue', FKZValue, sfVal),
               SF('D_YSResult', FYSValid),
+              SF('D_Unload', FHKRecord),
               SF('D_Memo', FMemo)
               ], sTable_OrderDtl, SF('D_ID', FID), False);
       FListA.Add(nSQL);
@@ -1041,23 +1046,13 @@ begin
       FListA.Add(nSQL); //更新采购单
     end;
 
-    {$IFDEF UseERP_K3}
+    //同步进备用库
     nStr := nPound[0].FID;
     if not TWorkerBusinessCommander.CallMe(cBC_SyncStockOrder, nStr, '', @nOut) then
     begin
       nData := nOut.FData;
       Exit;
     end;
-    {$ENDIF}
-
-    {$IFDEF XzdERP_A3}
-    nStr := nPound[0].FID;
-    if not TWorkerBusinessCommander.CallMe(cBC_SyncStockOrder, nStr, '', @nOut) then
-    begin
-      nData := nOut.FData;
-      Exit;
-    end;
-    {$ENDIF}
 
     nSQL := 'Select O_CType,O_Card From %s Where O_ID=''%s''';
     nSQL := Format(nSQL, [sTable_Order, nPound[0].FZhiKa]);
@@ -1088,12 +1083,6 @@ begin
   except
     FDBConn.FConn.RollbackTrans;
     raise;
-  end;
-
-  //微信下单的推送出厂通知，并修改商城订单状态
-  if (FIn.FExtParam = sFlag_TruckOut) and (Result = True) then
-  begin
-    PustMsgToWeb(nPound[0].FID,gSysParam.FFactory,sFlag_Provide,sFlag_WebOrderStatus_OT);
   end;
 
   if FIn.FExtParam = sFlag_TruckBFM then //称量毛重

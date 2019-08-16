@@ -1,6 +1,6 @@
 inherited fFormZhiKa: TfFormZhiKa
-  Left = 580
-  Top = 186
+  Left = 629
+  Top = 200
   Width = 461
   Height = 499
   BorderStyle = bsSizeable
@@ -239,7 +239,7 @@ inherited fFormZhiKa: TfFormZhiKa
           Default = True
           Kind = bkEllipsis
         end>
-      Properties.OnButtonClick = cxButtonEdit1PropertiesButtonClick
+      Properties.OnButtonClick = EditAreaPropertiesButtonClick
       Style.BorderColor = clWindowFrame
       Style.BorderStyle = ebsSingle
       Style.HotTrack = False
@@ -283,7 +283,7 @@ inherited fFormZhiKa: TfFormZhiKa
           ControlOptions.ShowBorder = False
         end
         object dxLayout1Item14: TdxLayoutItem
-          CaptionOptions.Text = #21306#22495#32534#30721':'
+          CaptionOptions.Text = #25152#23646#21306#22495':'
           Control = EditArea
           ControlOptions.ShowBorder = False
         end

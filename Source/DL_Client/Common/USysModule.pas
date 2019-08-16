@@ -5,12 +5,12 @@
   备注: 由于模块有自注册能力,只要Uses一下即可.
 *******************************************************************************}
 unit USysModule;
-                                                  
+
 {$I Link.Inc}
 interface
 
 uses
-  UClientWorker, UMITPacker, UFormBase,
+  UClientWorker, UMITPacker, UFormBase, UFormMemo,
   UFrameLog, UFrameSysLog, UFormIncInfo, UFormBackupSQL, UFormRestoreSQL,
   UFormPassword, UFormBaseInfo, UFrameAuthorize, UFormAuthorize, UFormOptions,
   UFrameCustomer, UFormCustomer, UFormGetCustom, UFrameSalesMan, UFormSalesMan,
@@ -30,7 +30,7 @@ uses
   UFrameQuerySaleTotal, UFrameZTDispatch, UFrameTrucks, UFormTruck,
   UFormRFIDCard, UFrameBillFactIn, UFormBillFactIn, UFormBillSalePlan,
   UFormTodo, UFormTodoSend, UFrameTodo, UFrameBatcodeJ, UFormBatcodeJ,
-  UFrameBillHK, UFormBillHK, UFormTransfer, UFrameTransfer,
+  UFrameBillHK, UFormBillHK,
   {$IFDEF MicroMsg}
   UFrameWeiXinAccount, UFormWeiXinAccount,
   UFrameWeiXinSendlog, UFormWeiXinSendlog,
@@ -42,8 +42,10 @@ uses
   UFormGetPOrderBase, UFormOrderDtl,
   {.$ENDIF}
   //----------------------------------------------------------------------------
+  UFormGetWechartAccount, UFrameAuditTruck, UFormAuditTruck, UFrameBillBuDanAudit,
   UFormHYStock, UFormHYData, UFormHYRecord, UFormGetStockNo,
-  UFrameHYStock, UFrameHYData, UFrameHYRecord, UFrameQueryTransferDetail;
+  UFrameHYStock, UFrameHYData, UFrameHYRecord,
+  UFormTransfer, UFrameTransfer, UFrameQueryTransferDetail;
 
 procedure InitSystemObject;
 procedure RunSystemObject;
@@ -53,7 +55,7 @@ implementation
 
 uses
   UMgrChannel, UChannelChooser, UDataModule, USysDB, USysMAC, SysUtils,
-  USysLoger, USysConst, UMemDataPool, ULibFun, UMgrLEDDisp;
+  USysLoger, USysConst, UMemDataPool, UMgrLEDDisp;
 
 //Desc: 初始化系统对象
 procedure InitSystemObject;
@@ -71,9 +73,6 @@ begin
   gChannelChoolser := TChannelChoolser.Create('');
   gChannelChoolser.AutoUpdateLocal := False;
   //channel
-  if FileExists(gPath + cDisp_Config) then
-    gDisplayManager.LoadConfig(gPath + cDisp_Config);
-  //LED DisPlay
 end;
 
 //Desc: 运行系统对象
@@ -95,10 +94,30 @@ begin
   begin
     FFactNum := Fields[0].AsString;
     FSerialID := Fields[1].AsString;
-    
+
     FDepartment := Fields[2].AsString;
     FHardMonURL := Trim(Fields[3].AsString);
     FMITServURL := Trim(Fields[4].AsString);
+  end;
+
+  //----------------------------------------------------------------------------
+  nStr := 'Select D_Value,D_Memo From %s Where D_Name=''%s''';
+  nStr := Format(nStr, [sTable_SysDict, sFlag_SysParam]);
+
+  with FDM.QueryTemp(nStr),gSysParam do
+  if RecordCount > 0 then
+  begin
+    First;
+    while not Eof do
+    begin
+      nStr := Fields[1].AsString;
+
+      if nStr = sFlag_WXServiceMIT then
+        FWechatURL := Fields[0].AsString;
+      //xxxxx
+
+      Next;
+    end;
   end;
 
   //----------------------------------------------------------------------------
@@ -144,8 +163,6 @@ begin
       if nStr = sFlag_PEmpTWuCha then
         gSysParam.FEmpTruckWc := Fields[0].AsFloat;
 
-      if nStr = sFlag_MonitorType then
-        gSysParam.FMonitorType := Fields[0].AsString;
       Next;
     end;
 
@@ -195,30 +212,22 @@ begin
     //xxxxx
   end;
 
-  //----------------------------------------------------------------------------
-  gSysParam.FFactory := '';
-  nStr := 'Select D_Value From %s where D_Name=''%s''';
-  nStr := Format(nStr, [sTable_SysDict, sFlag_FactoryID]);
-
-  with FDM.QueryTemp(nStr) do
-   if RecordCount > 0 then
-    gSysParam.FFactory := Trim(Fields[0].AsString);
-  //xxxxx
-
-  if gSysParam.FFactory = '' then
-    ShowMsg('请设置工厂ID', sHint);
-  //xxxxx
   CreateBaseFormItem(cFI_FormTodo);
   //待处理事项
-  gDisplayManager.StartDisplay;
-  //启动显示
+
+  {$IFDEF BFLED}
+  if FileExists(gPath + cDisp_Config) then
+  begin
+    gDisplayManager.LoadConfig(gPath + cDisp_Config);
+    gDisplayManager.StartDisplay;
+  end;
+  {$ENDIF}
 end;
 
 //Desc: 释放系统对象
 procedure FreeSystemObject;
 begin
   FreeAndNil(gSysLoger);
-  gDisplayManager.StopDisplay;
 end;
 
 end.

@@ -18,7 +18,7 @@ object fMainForm: TfMainForm
   object HintPanel: TPanel
     Left = 0
     Top = 0
-    Width = 622
+    Width = 630
     Height = 80
     Align = alTop
     BevelOuter = bvNone
@@ -28,7 +28,7 @@ object fMainForm: TfMainForm
     object Image1: TImage
       Left = 0
       Top = 0
-      Width = 401
+      Width = 409
       Height = 80
       Align = alClient
       AutoSize = True
@@ -702,7 +702,7 @@ object fMainForm: TfMainForm
       OnDblClick = Image1DblClick
     end
     object Image2: TImage
-      Left = 401
+      Left = 409
       Top = 0
       Width = 221
       Height = 80
@@ -1323,8 +1323,8 @@ object fMainForm: TfMainForm
   end
   object sBar: TStatusBar
     Left = 0
-    Top = 376
-    Width = 622
+    Top = 380
+    Width = 630
     Height = 20
     Panels = <
       item
@@ -1344,7 +1344,7 @@ object fMainForm: TfMainForm
     Left = 185
     Top = 80
     Width = 8
-    Height = 296
+    Height = 300
     HotZoneClassName = 'TcxXPTaskBarStyle'
     Control = NavBar1
   end
@@ -1352,7 +1352,7 @@ object fMainForm: TfMainForm
     Left = 0
     Top = 80
     Width = 185
-    Height = 296
+    Height = 300
     Align = alLeft
     ActiveGroupIndex = 0
     TabOrder = 3
@@ -1379,8 +1379,8 @@ object fMainForm: TfMainForm
   object wPage: TcxPageControl
     Left = 193
     Top = 80
-    Width = 429
-    Height = 296
+    Width = 437
+    Height = 300
     ActivePage = Sheet1
     Align = alClient
     Images = FDM.Imagesmall
@@ -1391,9 +1391,9 @@ object fMainForm: TfMainForm
     TabSlants.Kind = skCutCorner
     OnChange = wPageChange
     OnPageChanging = wPagePageChanging
-    ClientRectBottom = 295
+    ClientRectBottom = 299
     ClientRectLeft = 1
-    ClientRectRight = 428
+    ClientRectRight = 436
     ClientRectTop = 22
     object Sheet1: TcxTabSheet
       Caption = #40664#35748#32972#26223
@@ -1401,8 +1401,8 @@ object fMainForm: TfMainForm
       object PanelBG: TZnBitmapPanel
         Left = 0
         Top = 0
-        Width = 427
-        Height = 273
+        Width = 435
+        Height = 277
         Align = alClient
       end
     end

@@ -1163,8 +1163,7 @@ begin
               SF('L_Lading', FListA.Values['Lading']),
               SF('L_IsVIP', FListA.Values['IsVIP']),
               SF('L_Man', FIn.FBase.FFrom.FUser),
-              SF('L_Date', sField_SQLServer_Now, sfVal),
-              SF('L_AreaCode', FListA.Values['AreaCode']),
+              SF('L_Date', sField_SQLServer_Now, sfVal)
               ], sTable_Bill, '', True);
       gDBConnManager.WorkerExec(FDBConn, nStr);
 

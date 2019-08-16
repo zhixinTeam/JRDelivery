@@ -9,12 +9,14 @@ unit MIT_Service_Intf;
 {----------------------------------------------------------------------------}
 
 {$I RemObjects.inc}
+{$I LibFun.inc}
 
 interface
 
 uses
   {vcl:} Classes, TypInfo,
-  {RemObjects:} uROXMLIntf, uROClasses, uROClient, uROTypes, uROClientIntf;
+  {RemObjects:} uROXMLIntf, uROClasses, uROClient, uROTypes, uROClientIntf
+  {$IFDEF RO_v90}, uROProxy{$ENDIF};
 
 const
   { Library ID }
@@ -38,7 +40,7 @@ type
   { ISrvConnection }
 
   { Description:
-      Service For Login Verify,SweetHeart ETC. }
+      连接服务,负责安全验证、心跳指令等 }
   ISrvConnection = interface
     ['{3E08D66D-DFBE-485E-A65C-F5EC6DC9F7CF}']
     function Action(const nFunName: AnsiString; var nData: AnsiString): Boolean;
@@ -60,7 +62,7 @@ type
   { ISrvBusiness }
 
   { Description:
-      Service For Business }
+      处理系统业务 }
   ISrvBusiness = interface
     ['{6173318C-3ECB-4FA8-A32A-4FC64D22AFF5}']
     function Action(const nFunName: AnsiString; var nData: AnsiString): Boolean;

@@ -15,7 +15,8 @@ uses
   cxCheckBox, cxTextEdit, cxMaskEdit, cxButtonEdit, ADODB, cxLabel,
   UBitmapPanel, cxSplitter, cxGridLevel, cxClasses, cxGridCustomView,
   cxGridCustomTableView, cxGridTableView, cxGridDBTableView, cxGrid,
-  ComCtrls, ToolWin, dxLayoutcxEditAdapters;
+  ComCtrls, ToolWin, dxLayoutcxEditAdapters, dxSkinsCore,
+  dxSkinsDefaultPainters, dxSkinscxPCPainter;
 
 type
   TfFrameTransfer = class(TfFrameNormal)
@@ -215,8 +216,8 @@ begin
     if SaveDDCard(SQLQuery.FieldByName('B_ID').AsString, 'H' + nP.FParamB) then
       ShowMsg('办理磁卡成功', sHint);
     {$ELSE}
-    if SetBillCard(SQLQuery.FieldByName('B_ID').AsString,
-      SQLQuery.FieldByName('B_Truck').AsString, True, sFlag_DuanDao) then
+    if SetDDCard(SQLQuery.FieldByName('B_ID').AsString,
+      SQLQuery.FieldByName('B_Truck').AsString, True) then
       ShowMsg('办理磁卡成功', sHint);
     //办理磁卡
     {$ENDIF}

@@ -62,6 +62,7 @@ type
     //载入数据
     function SetData(Sender: TObject; const nData: string): Boolean;
     //数据相关
+    procedure WriteOptionLog;
   public
     { Public declarations }
     class function CreateForm(const nPopedom: string = '';
@@ -76,9 +77,24 @@ uses
   IniFiles, ULibFun, UMgrControl, UFormCtrl, UAdjustForm, USysBusiness,
   USysGrid, USysDB, USysConst;
 
+type
+  TDataOldItem = record
+    FID        : string;
+    FName      : string;
+    FProID     : string;
+    FProName   : string;
+    FTruck     : string;
+    FKzValue   : string;
+    FPValue    : string;
+    FMValue    : string;
+    FUpdate    : Boolean;
+  end;
+
 var
   gForm: TfFormOrderDtl = nil;
   //全局使用
+  gOldData: TDataOldItem;
+  //原始通道配置
 
 class function TfFormOrderDtl.CreateForm(const nPopedom: string;
   const nParam: Pointer): TWinControl;
@@ -201,13 +217,44 @@ begin
             'Where D_ID=''%s''';
     nStr := Format(nStr, [sTable_OrderDtl, sTable_Order, nID]);
     LoadDataToCtrl(FDM.QueryTemp(nStr), Self, '', SetData);
+
+    //记录原始数据
+    gOldData.FID        := EditStock.Text;
+    gOldData.FName      := EditStockName.Text;
+    gOldData.FProID     := EditProID.Text;
+    gOldData.FProName   := EditProName.Text;
+    gOldData.FTruck     := EditTruck.Text;
+    gOldData.FKzValue   := cxTextEdit3.Text;
+    gOldData.FPValue    := EditPValue.Text;
+    gOldData.FMValue    := EditMValue.Text;
+    gOldData.FUpdate    := EditCheck.Checked = True;
   end;
 end;
 
 //Desc: 保存数据
 procedure TfFormOrderDtl.BtnOKClick(Sender: TObject);
-var nSQL: string;
+var nSQL, nStr: string;
+    nP: TFormCommandParam;
 begin
+  {$IFDEF ForceMemo}
+  with nP do
+  begin
+    nStr := FDetailID;
+    nStr := Format('请填写修改[ %s ]单据的原因', [nStr]);
+
+    FCommand := cCmd_EditData;
+    FParamA := nStr;
+    FParamB := 320;
+    FParamD := 2;
+
+    FParamC := 'Update %s Set D_Memo=''$Memo'' Where D_ID=''%s''';
+    FParamC := Format(FParamC, [sTable_OrderDtl, FDetailID]);
+
+    CreateBaseFormItem(cFI_FormMemo, '', @nP);
+    if (FCommand <> cCmd_ModalResult) or (FParamA <> mrOK) then Exit;
+  end;
+  {$ENDIF}
+
   nSQL := MakeSQLByForm(Self, sTable_OrderDtl, SF('D_ID', FDetailID), False);
 
   FDM.ADOConn.BeginTrans;
@@ -238,6 +285,8 @@ begin
     end;
 
     FDM.ADOConn.CommitTrans;
+    WriteOptionLog;
+    //--写入操作日志
     ModalResult := mrOK;
     ShowMsg('数据已保存', sHint);
   except
@@ -279,6 +328,64 @@ begin
 
       EditTruck.Text := nP.FParamB;
     end;
+  end;
+end;
+
+procedure TfFormOrderDtl.WriteOptionLog;
+var nEvent: string;
+begin
+  nEvent := '';
+
+  if gOldData.FID <> EditStock.Text then
+  begin
+    nEvent := nEvent + '原材料编号由 [ %s ] --> [ %s ];';
+    nEvent := Format(nEvent, [gOldData.FID, EditStock.Text]);
+  end;
+  if gOldData.FName <> EditStockName.Text then
+  begin
+    nEvent := nEvent + '原材料名称由 [ %s ] --> [ %s ];';
+    nEvent := Format(nEvent, [gOldData.FName, EditStockName.Text]);
+  end;
+  if gOldData.FProID <> EditProID.Text then
+  begin
+    nEvent := nEvent + '供应商编号由 [ %s ] --> [ %s ];';
+    nEvent := Format(nEvent, [gOldData.FProID, EditProID.Text]);
+  end;
+  if gOldData.FProName <> EditProName.Text then
+  begin
+    nEvent := nEvent + '供应商名称由 [ %s ] --> [ %s ];';
+    nEvent := Format(nEvent, [gOldData.FProName, EditProName.Text]);
+  end;
+  if gOldData.FTruck <> EditTruck.Text then
+  begin
+    nEvent := nEvent + '车牌号码由 [ %s ] --> [ %s ];';
+    nEvent := Format(nEvent, [gOldData.FTruck, EditTruck.Text]);
+  end;
+  if gOldData.FKzValue <> cxTextEdit3.Text then
+  begin
+    nEvent := nEvent + '扣杂吨数由 [ %s ] --> [ %s ];';
+    nEvent := Format(nEvent, [gOldData.FKzValue, cxTextEdit3.Text]);
+  end;
+  if gOldData.FPValue <> EditPValue.Text then
+  begin
+    nEvent := nEvent + '皮重由 [ %s ] --> [ %s ];';
+    nEvent := Format(nEvent, [gOldData.FPValue, EditPValue.Text]);
+  end;
+  if gOldData.FMValue <> EditMValue.Text then
+  begin
+    nEvent := nEvent + '毛重由 [ %s ] --> [ %s ];';
+    nEvent := Format(nEvent, [gOldData.FMValue, EditMValue.Text]);
+  end;
+
+  if nEvent <> '' then
+  begin
+    nEvent := '采购订单 [ %s ] 参数已被修改:' + nEvent;
+    nEvent := Format(nEvent, [gOldData.FID]);
+  end;
+
+  if nEvent <> '' then
+  begin
+    FDM.WriteSysLog(sFlag_OrderItem, FOrderID, nEvent);
   end;
 end;
 

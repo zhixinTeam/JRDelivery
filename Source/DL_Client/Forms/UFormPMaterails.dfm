@@ -1,53 +1,53 @@
 inherited fFormMaterails: TfFormMaterails
-  Left = 476
-  Top = 299
+  Left = 485
+  Top = 217
   BorderIcons = [biSystemMenu, biMinimize]
   BorderStyle = bsSingle
-  ClientHeight = 500
-  ClientWidth = 465
+  ClientHeight = 424
+  ClientWidth = 371
   OldCreateOrder = True
   OnClose = FormClose
   OnCreate = FormCreate
   OnKeyDown = FormKeyDown
-  PixelsPerInch = 120
-  TextHeight = 15
+  PixelsPerInch = 96
+  TextHeight = 12
   object dxLayoutControl1: TdxLayoutControl
     Left = 0
     Top = 0
-    Width = 465
-    Height = 500
+    Width = 371
+    Height = 424
     Align = alClient
     TabOrder = 0
     TabStop = False
     AutoContentSizes = [acsWidth, acsHeight]
     LookAndFeel = FDM.dxLayoutWeb1
     object EditName: TcxTextEdit
-      Left = 87
-      Top = 73
+      Left = 81
+      Top = 61
       Hint = 'T.M_Name'
       ParentFont = False
       Properties.MaxLength = 30
       TabOrder = 1
       OnKeyDown = FormKeyDown
-      Width = 173
+      Width = 138
     end
     object EditMemo: TcxMemo
-      Left = 87
-      Top = 157
+      Left = 81
+      Top = 161
       Hint = 'T.M_Memo'
       ParentFont = False
       Properties.MaxLength = 50
       Properties.ScrollBars = ssVertical
       Style.Edges = [bBottom]
-      TabOrder = 6
-      Height = 50
-      Width = 335
+      TabOrder = 7
+      Height = 40
+      Width = 268
     end
     object InfoList1: TcxMCListBox
-      Left = 29
-      Top = 308
-      Width = 496
-      Height = 131
+      Left = 23
+      Top = 288
+      Width = 397
+      Height = 105
       HeaderSections = <
         item
           Text = #20449#24687#39033
@@ -56,92 +56,92 @@ inherited fFormMaterails: TfFormMaterails
         item
           AutoSize = True
           Text = #20869#23481
-          Width = 387
+          Width = 288
         end>
       ParentFont = False
       Style.BorderStyle = cbsOffice11
       Style.Edges = [bLeft, bTop, bRight, bBottom]
-      TabOrder = 11
+      TabOrder = 12
     end
     object InfoItems: TcxComboBox
-      Left = 87
-      Top = 252
+      Left = 81
+      Top = 238
       ParentFont = False
       Properties.ImmediateDropDown = False
       Properties.IncrementalSearch = False
       Properties.MaxLength = 30
-      TabOrder = 7
-      Width = 94
+      TabOrder = 8
+      Width = 75
     end
     object EditInfo: TcxTextEdit
-      Left = 87
-      Top = 280
+      Left = 81
+      Top = 263
       ParentFont = False
       Properties.MaxLength = 50
-      TabOrder = 9
-      Width = 113
+      TabOrder = 10
+      Width = 90
     end
     object BtnAdd: TButton
-      Left = 380
-      Top = 252
-      Width = 56
-      Height = 22
+      Left = 303
+      Top = 238
+      Width = 45
+      Height = 17
       Caption = #28155#21152
-      TabOrder = 8
+      TabOrder = 9
       OnClick = BtnAddClick
     end
     object BtnDel: TButton
-      Left = 380
-      Top = 280
-      Width = 56
-      Height = 22
+      Left = 303
+      Top = 263
+      Width = 45
+      Height = 18
       Caption = #21024#38500
-      TabOrder = 10
+      TabOrder = 11
       OnClick = BtnDelClick
     end
     object BtnOK: TButton
-      Left = 272
-      Top = 458
-      Width = 87
-      Height = 28
+      Left = 216
+      Top = 390
+      Width = 69
+      Height = 23
       Caption = #20445#23384
-      TabOrder = 12
+      TabOrder = 13
       OnClick = BtnOKClick
     end
     object BtnExit: TButton
-      Left = 364
-      Top = 458
-      Width = 87
-      Height = 28
+      Left = 290
+      Top = 390
+      Width = 70
+      Height = 23
       Caption = #21462#28040
-      TabOrder = 13
+      TabOrder = 14
       OnClick = BtnExitClick
     end
     object cxTextEdit3: TcxTextEdit
-      Left = 87
-      Top = 101
+      Left = 81
+      Top = 86
       Hint = 'T.M_Unit'
       ParentFont = False
       Properties.MaxLength = 20
       TabOrder = 2
       Text = #21544
       OnKeyDown = FormKeyDown
-      Width = 115
+      Width = 92
     end
     object EditPrice: TcxTextEdit
-      Left = 289
-      Top = 101
+      Left = 260
+      Top = 86
       Hint = 'T.M_Price'
       HelpType = htKeyword
       HelpKeyword = 'D'
       ParentFont = False
       TabOrder = 3
       Text = '0'
-      Width = 133
+      Width = 107
     end
     object EditPValue: TcxComboBox
-      Left = 87
-      Top = 129
+      Left = 81
+      Top = 111
       Hint = 'T.M_PrePValue'
       ParentFont = False
       Properties.DropDownListStyle = lsEditFixedList
@@ -152,26 +152,38 @@ inherited fFormMaterails: TfFormMaterails
         'Y'#12289#20801#35768
         'N'#12289#31105#27490)
       TabOrder = 4
-      Width = 115
+      Width = 92
     end
     object EditPTime: TcxTextEdit
-      Left = 289
-      Top = 129
+      Left = 260
+      Top = 111
       Hint = 'T.M_PrePTime'
       ParentFont = False
       TabOrder = 5
       Text = '1'
-      Width = 151
+      Width = 121
     end
     object EditID: TcxTextEdit
-      Left = 87
-      Top = 45
+      Left = 81
+      Top = 36
       Hint = 'T.M_ID'
       ParentFont = False
       Properties.MaxLength = 30
       TabOrder = 0
       OnKeyDown = FormKeyDown
-      Width = 353
+      Width = 282
+    end
+    object cxbLs: TcxComboBox
+      Left = 81
+      Top = 136
+      ParentFont = False
+      Properties.DropDownListStyle = lsEditFixedList
+      Properties.Items.Strings = (
+        'N'#12289#21542
+        'Y'#12289#26159)
+      TabOrder = 6
+      Text = 'N'#12289#21542
+      Width = 121
     end
     object dxLayoutControl1Group_Root: TdxLayoutGroup
       ShowCaption = False
@@ -232,6 +244,11 @@ inherited fFormMaterails: TfFormMaterails
             Control = EditPTime
             ControlOptions.ShowBorder = False
           end
+        end
+        object dxLayoutControl1Item15: TdxLayoutItem
+          Caption = #29983#25104#27969#27700':'
+          Control = cxbLs
+          ControlOptions.ShowBorder = False
         end
         object dxLayoutControl1Item4: TdxLayoutItem
           Caption = #22791#27880#20449#24687':'

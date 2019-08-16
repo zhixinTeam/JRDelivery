@@ -1,44 +1,54 @@
-unit uFormGetWechartAccount;
+{*******************************************************************************
+  作者: dmzn@163.com 2017-10-26
+  描述: 获取已注册微信账户
+*******************************************************************************}
+unit UFormGetWechartAccount;
 
 interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, UFormNormal, cxGraphics, cxControls, cxLookAndFeels,
-  cxLookAndFeelPainters, dxLayoutControl, StdCtrls, dxLayoutcxEditAdapters,
-  cxContainer, cxEdit, ComCtrls, cxListView, cxLabel, cxTextEdit;
+  UFormNormal, cxGraphics, cxControls, cxLookAndFeels,
+  cxLookAndFeelPainters, cxContainer, cxEdit, ComCtrls, ImgList, ExtCtrls,
+  cxTextEdit, cxMaskEdit, cxButtonEdit, cxListView, cxLabel,
+  dxLayoutControl, StdCtrls;
 
 type
-  //客户注册信息
-  PWechartCustomerInfo = ^TWechartCustomerInfo;
-  TWechartCustomerInfo = record
-    FBindcustomerid:string;//绑定客户id  
-    FNamepinyin:string;//登录账号
-    FEmail:string;//邮箱
-    Fphone:string;//手机号码
+  TWechatCustomer = record
+    FBindID   : string;   //绑定客户id
+    FCusName  : string;   //登录账号
+    FEmail    : string;   //邮箱
+    FPhone    : string;   //手机号码
+    FSelected : Boolean;  //选中状态
   end;
 
+  TWechatCustomers = array of TWechatCustomer;
+  //账户列表
+
   TfFormGetWechartAccount = class(TfFormNormal)
-    edtinput: TcxTextEdit;
-    dxLayout1Item3: TdxLayoutItem;
     cxLabel1: TcxLabel;
     dxLayout1Item4: TdxLayoutItem;
     ListQuery: TcxListView;
     dxLayout1Item5: TdxLayoutItem;
-    procedure edtinputKeyPress(Sender: TObject; var Key: Char);
+    EditName: TcxButtonEdit;
+    dxLayout1Item6: TdxLayoutItem;
+    Timer1: TTimer;
+    ImageList1: TImageList;
+    procedure Timer1Timer(Sender: TObject);
+    procedure EditNamePropertiesButtonClick(Sender: TObject;
+      AButtonIndex: Integer);
+    procedure EditNamePropertiesChange(Sender: TObject);
     procedure BtnOKClick(Sender: TObject);
-    procedure ListQueryDblClick(Sender: TObject);
-    procedure edtinputPropertiesChange(Sender: TObject);
+    procedure EditNameKeyPress(Sender: TObject; var Key: Char);
+    procedure EditNameKeyDown(Sender: TObject; var Key: Word;
+      Shift: TShiftState);
+    procedure FormCreate(Sender: TObject);
+    procedure FormClose(Sender: TObject; var Action: TCloseAction);
   private
     { Private declarations }
-    //微信注册用户信息列表
-    FCustomerInfos:TList;
-    FSelectedStr:string;
-    FNamepinyin:string;
-    //查询数据
-    procedure GetResult;
-    procedure FilterFunc(const nInputStr:string);
-    function DownloadAllCustomerInfos:Boolean;
+    FUsers: TWechatCustomers;
+    procedure LoadCustomerList;
+    procedure LoadCustomer(nFilter: string);
   public
     { Public declarations }
     class function CreateForm(const nPopedom: string = '';
@@ -47,15 +57,17 @@ type
   end;
 
 implementation
-uses
-  Contnrs,UFormBase,USysConst,UBusinessPacker,ULibFun,UMgrControl,USysBusiness;
+
 {$R *.dfm}
 
-{ TfFormNormal1 }
+uses
+  Contnrs, UFormBase, USysConst, UBusinessPacker, ULibFun, UMgrControl,
+  UFormWait, USysBusiness;
 
 class function TfFormGetWechartAccount.CreateForm(const nPopedom: string;
   const nParam: Pointer): TWinControl;
-var nP: PFormCommandParam;
+var nIdx: Integer;
+    nP: PFormCommandParam;
 begin
   Result := nil;
   if Assigned(nParam) then
@@ -64,173 +76,178 @@ begin
 
   with TfFormGetWechartAccount.Create(Application) do
   try
-    FCustomerInfos := TList.Create;
-    FSelectedStr := '';
-    FNamepinyin := '';
-
     Caption := '选择账号';
-//    dxLayout1Item5.Caption := '商城注册信息选择';
-
     nP.FCommand := cCmd_ModalResult;
-
-    DownloadAllCustomerInfos;
-    
     nP.FParamA := ShowModal;
 
     if nP.FParamA = mrOK then
-    begin
-      nP.FParamB := PackerEncodeStr(FSelectedStr);
-      nP.FParamC := PackerEncodeStr(FNamepinyin);
+    begin 
+      nIdx := Integer(ListQuery.Selected.Data);
+      nP.FParamB := FUsers[nIdx].FBindID;
+      nP.FParamC := FUsers[nIdx].FCusName;
+      nP.FParamD := FUsers[nIdx].FPhone;
     end;
   finally
-    FCustomerInfos.Clear;
-    FCustomerInfos.Free;
     Free;
   end;
 end;
 
 class function TfFormGetWechartAccount.FormID: integer;
 begin
-  Result := cFI_FormGetWechartAccount;
+  Result := cFI_FormGetWXAccount;
 end;
 
-procedure TfFormGetWechartAccount.edtinputKeyPress(Sender: TObject; var Key: Char);
+procedure TfFormGetWechartAccount.FormCreate(Sender: TObject);
 begin
-  if Key = #13 then
-  begin
-    Key := #0;
-    if ListQuery.Items.Count=1 then
-    begin
-      ListQuery.ItemIndex := 0;
-      GetResult;
-      ModalResult := mrOk;
-    end;
-  end
-  else begin
-    FilterFunc(edtinput.Text);
-  end;
+  LoadFormConfig(Self);
 end;
 
-procedure TfFormGetWechartAccount.GetResult;
+procedure TfFormGetWechartAccount.FormClose(Sender: TObject;
+  var Action: TCloseAction);
 begin
-  with ListQuery.Selected do
-  begin
-    FSelectedStr := SubItems[2];
-    FNamepinyin := Caption;
-  end;
+  SaveFormConfig(Self);
 end;
 
-procedure TfFormGetWechartAccount.FilterFunc(const nInputStr: string);
-var
-  i:Integer;
-  nRec:PWechartCustomerInfo;
+procedure TfFormGetWechartAccount.Timer1Timer(Sender: TObject);
 begin
-  ListQuery.Clear;
-  if nInputStr='' then
-  begin
-    for i := 0 to FCustomerInfos.Count-1 do
-    begin
-      nRec := PWechartCustomerInfo(FCustomerInfos.Items[i]);
-      with ListQuery.Items.Add do
+  Timer1.Enabled := False;
+  SetLength(FUsers, 0);
+  LoadCustomer('');
+end;
+
+procedure TfFormGetWechartAccount.EditNamePropertiesButtonClick(
+  Sender: TObject; AButtonIndex: Integer);
+begin
+  EditName.Text := '';
+end;
+
+procedure TfFormGetWechartAccount.EditNamePropertiesChange(Sender: TObject);
+begin
+  LoadCustomer(EditName.Text);
+end;
+
+//------------------------------------------------------------------------------
+procedure TfFormGetWechartAccount.LoadCustomerList;
+var nIdx: Integer;
+begin
+  ListQuery.Items.BeginUpdate;
+  try
+    ListQuery.Clear;
+    for nIdx:=Low(FUsers) to High(FUsers) do
+     with FUsers[nIdx] do
       begin
-        Caption := nRec.FNamepinyin;
-        SubItems.Add(nRec.FEmail);
-        SubItems.Add(nRec.Fphone);
-        SubItems.Add(nRec.FBindcustomerid);
-        ImageIndex := cItemIconIndex;
-      end;
-    end;
-  end
-  else begin
-    for i := 0 to FCustomerInfos.Count-1 do
-    begin
-      nRec := PWechartCustomerInfo(FCustomerInfos.Items[i]);
-      if (LowerCase(nInputStr)=LowerCase(nRec.FNamepinyin))
-        or (LowerCase(nInputStr)=LowerCase(nrec.Fphone))
-        or (Pos(LowerCase(nInputStr),LowerCase(nRec.FNamepinyin))>0)
-        or (Pos(LowerCase(nInputStr),LowerCase(nrec.Fphone))>0) then
-      begin
+        if not FSelected then Continue;
         with ListQuery.Items.Add do
         begin
-          Caption := nRec.FNamepinyin;
-          SubItems.Add(nRec.FEmail);
-          SubItems.Add(nRec.Fphone);
-          SubItems.Add(nRec.FBindcustomerid);
-          ImageIndex := cItemIconIndex;
+          Caption := FCusName;
+          SubItems.Add('');
+          SubItems.Add(FPhone);
+          Data := Pointer(nIdx);
         end;
       end;
-    end;  
+    //xxxxx
+
+    if ListQuery.Items.Count > 0 then
+      ListQuery.ItemIndex := 0;
+    //select first
+  finally
+    ListQuery.Items.EndUpdate;
   end;
 end;
 
-function TfFormGetWechartAccount.DownloadAllCustomerInfos: Boolean;
-var
-  nXmlStr,nData:string;
-  i:Integer;
-  nList,nListsub:TStrings;
-  nRec:PWechartCustomerInfo;
+procedure TfFormGetWechartAccount.LoadCustomer(nFilter: string);
+var nIdx,nInt: Integer;
+    nListA,nListB: TStrings;
 begin
-  Result := False;
-  nXmlStr := '<?xml version="1.0" encoding="UTF-8"?>'
-            +'<DATA>'
-            +'<head>'
-            +'<Factory>%s</Factory>'
-            +'</head>'
-            +'</DATA>';
-   nXmlStr := Format(nXmlStr,[gSysParam.FFactory]);
-   nXmlStr := PackerEncodeStr(nXmlStr);
-   //获取客户注册信息
-   nData := getCustomerInfo(nXmlStr);
-   if nData='' then
-   begin
-     ShowMsg('未查询到当前工厂的注册用户信息', sHint);
-     Exit;
-   end;
+  if Length(FUsers) < 1 then
+  begin
+    nListA := nil;
+    nListB := nil;
+    ShowWaitForm(Self, '读取微信账户', True);
+    try
+      nListA := TStringList.Create;
+      nListA.Text := getCustomerInfo('');
+      nListB := TStringList.Create;
 
-  //解析客户注册信息
-  nData := PackerDecodeStr(nData);
-  nList := TStringList.Create;
-  nListsub := TStringList.Create;
-  try
-    nList.Text := nData;
-    for i := 0 to nList.Count-1 do
-    begin
-      New(nRec);
-      nListsub.CommaText := nList.Strings[i];
-      nRec.Fphone := nListsub.Values['phone'];
-      nRec.FBindcustomerid := nListsub.Values['Bindcustomerid'];
-      nRec.FNamepinyin := nListsub.Values['Namepinyin'];
-      nRec.FEmail := nListsub.Values['Email'];
-      FCustomerInfos.Add(nRec);
-    end;
-    FilterFunc('');
-  finally
-    nListsub.Free;
-    nList.Free;
+      nInt := 0;
+      SetLength(FUsers, nListA.Count);
+
+      for nIdx:=0 to nListA.Count-1 do
+      begin
+        nListB.Text := PackerDecodeStr(nListA[nIdx]);
+        with FUsers[nInt],nListB do
+        begin
+          FBindID   := Values['BindID'];
+          FCusName  := Values['Name'];
+          FPhone    := Values['Phone'];
+
+          Inc(nInt);
+        end;
+      end;
+    finally
+      nListA.Free;
+      nListB.Free;
+      CloseWaitForm;
+    end;   
+  end;
+
+  if Length(FUsers) > 0 then
+  begin
+    nFilter := LowerCase(nFilter);
+    //case
+
+    for nIdx:=Low(FUsers) to High(FUsers) do
+     with FUsers[nIdx] do
+      FSelected := (nFilter = '') or
+                   (Pos(nFilter, LowerCase(FCusName)) > 0) or
+                   (Pos(nFilter, LowerCase(FPhone)) > 0);
+    //set item status
+
+    LoadCustomerList;
+    //load ui
+  end;
+end;
+
+procedure TfFormGetWechartAccount.EditNameKeyPress(Sender: TObject;
+  var Key: Char);
+begin
+  if Key = Char(VK_RETURN) then
+  begin
+    Key := #0;
+    if ListQuery.ItemIndex >= 0 then
+      ModalResult := mrOk;
+    //xxxxx
+  end;
+
+end;
+
+procedure TfFormGetWechartAccount.EditNameKeyDown(Sender: TObject;
+  var Key: Word; Shift: TShiftState);
+begin
+  if Key = VK_UP then
+  begin
+    Key := 0;
+    if ListQuery.ItemIndex > 0 then
+      ListQuery.ItemIndex := ListQuery.ItemIndex - 1;
+    //xxxx
+  end;
+
+  if Key = VK_DOWN then
+  begin
+    Key := 0;
+    if ListQuery.ItemIndex < ListQuery.Items.Count-1 then
+      ListQuery.ItemIndex := ListQuery.ItemIndex + 1;
+    //xxxx
   end;
 end;
 
 procedure TfFormGetWechartAccount.BtnOKClick(Sender: TObject);
 begin
-  if ListQuery.ItemIndex > -1 then
-  begin
-    GetResult;
-    ModalResult := mrOk;
-  end else ShowMsg('请在查询结果中选择', sHint);
-end;
-
-procedure TfFormGetWechartAccount.ListQueryDblClick(Sender: TObject);
-begin
-  BtnOK.Click;
-end;
-
-procedure TfFormGetWechartAccount.edtinputPropertiesChange(
-  Sender: TObject);
-begin
-  FilterFunc(edtinput.Text);
+  if ListQuery.ItemIndex < 0 then
+       ShowMsg('请选择有效账户', sHint)
+  else ModalResult := mrOk;
 end;
 
 initialization
-  gControlManager.RegCtrl(TfFormGetWechartAccount, TfFormGetWechartAccount.FormID);
-
+  gControlManager.RegCtrl(TfFormGetWechartAccount, TfFormGetWechartAccount.FormID); 
 end.

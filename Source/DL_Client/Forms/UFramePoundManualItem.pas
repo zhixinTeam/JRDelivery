@@ -104,7 +104,9 @@ type
     //读取车辆称重
     function SavePoundSale: Boolean;
     function SavePoundData: Boolean;
-    //保存称重     
+    //保存称重
+    function IsTruckProbeOK: Boolean;
+    //检查车检
     procedure PlayVoice(const nStrtext: string);
     //播放语音
   public
@@ -601,6 +603,7 @@ procedure TfFrameManualPoundItem.BtnReadNumberClick(Sender: TObject);
 var nVal: Double;
 begin
   if not IsNumber(EditValue.Text, True) then Exit;
+  if not IsTruckProbeOK then Exit;
   nVal := StrToFloat(EditValue.Text);
 
   if (Length(FBillItems) > 0) and (FCardUsed <> sFlag_Provide) then
@@ -922,20 +925,7 @@ end;
 procedure TfFrameManualPoundItem.BtnSaveClick(Sender: TObject);
 var nBool: Boolean;
 begin
-  {$IFDEF MITTruckProber}
-    if not IsTunnelOK(FPoundTunnel.FID) then
-  {$ELSE}
-    {$IFDEF HR1847}
-    if not gKRMgrProber.IsTunnelOK(FPoundTunnel.FID) then
-    {$ELSE}
-    if not gProberManager.IsTunnelOK(FPoundTunnel.FID) then
-    {$ENDIF}
-  {$ENDIF}
-  begin
-    ShowMsg('车辆未站稳,请稍后', sHint);
-    Exit;
-  end;
-
+  if not IsTruckProbeOK then Exit;
   nBool := False;
   try
     BtnSave.Enabled := False;
@@ -986,6 +976,27 @@ begin
      (CompareText('NET', FPoundTunnel.FOptions.Values['Voice']) = 0) then
        gNetVoiceHelper.PlayVoice(nStrtext, FPoundTunnel.FID, 'pound')
   else gVoiceHelper.PlayVoice(nStrtext);
+end;
+
+//Desc: 车将检测器判定
+function TfFrameManualPoundItem.IsTruckProbeOK: Boolean;
+begin
+  Result := True;
+  //default
+
+  {$IFDEF MITTruckProber}
+    if not IsTunnelOK(FPoundTunnel.FID) then
+  {$ELSE}
+    {$IFDEF HR1847}
+    if not gKRMgrProber.IsTunnelOK(FPoundTunnel.FID) then
+    {$ELSE}
+    if not gProberManager.IsTunnelOK(FPoundTunnel.FID) then
+    {$ENDIF}
+  {$ENDIF}
+  begin
+    ShowMsg('车辆未站稳,请稍后', sHint);
+    Result := False;
+  end;
 end;
 
 end.

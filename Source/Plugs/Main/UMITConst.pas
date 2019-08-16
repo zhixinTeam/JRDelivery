@@ -49,7 +49,6 @@ type
     FMainTitle  : string;                            //主窗体标题
     FHintText   : string;                            //提示文本
     FCopyRight  : string;                            //版权声明
-    FFactory    : string;                            //工厂ID
 
     FAppFlag    : string;                            //程序标识
     FParam      : string;                            //启动参数
@@ -65,7 +64,6 @@ type
 
     FDisplayDPI : Integer;                           //屏幕分辨率
     FAutoMin    : Boolean;                           //自动最小化
-    FGPWSURL    : string;                            //集团公共web服务平台地址
   end;
   //系统参数
 
@@ -149,8 +147,6 @@ begin
         FParam     := ParamStr(1);
         FIconFile  := ReadString(FProgID, 'IconFile', gPath + 'Icons\Icon.ini');
         FIconFile  := StringReplace(FIconFile, '$Path\', gPath, [rfIgnoreCase]);
-        FGPWSURL   := ReadString(FProgID, 'GPWSURL', '');
-        FFactory   := ReadString(FProgID, 'FactoryId', '');
 
         FLocalMAC   := MakeActionID_MAC;
         GetLocalIPConfig(FLocalName, FLocalIP);

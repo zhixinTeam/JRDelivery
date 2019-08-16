@@ -24,7 +24,6 @@ inherited fFramePoundAuto: TfFramePoundAuto
     Height = 8
     HotZoneClassName = 'TcxXPTaskBarStyle'
     AlignSplitter = salBottom
-    Control = RichEdit1
   end
   object RichEdit1: TRichEdit
     Left = 0

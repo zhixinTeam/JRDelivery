@@ -340,44 +340,6 @@ begin
   Result := FDR.PrintSuccess;
 end;
 
-//2018-05-14
-//打印短倒单
-function PrintDDReport(const nID: string; var nHint: string;
- const nPrinter: string = ''; const nMoney: string = '0'): Boolean;
-var nStr: string;
-    nDS: TDataSet;
-begin
-  Result := False;
-
-  nStr := 'Select * From %s Where T_ID=''%s''';
-  nStr := Format(nStr, [sTable_Transfer, nID]);
-
-  nDS := FDM.SQLQuery(nStr, FDM.SQLQuery1);
-  if not Assigned(nDS) then Exit;
-
-  if nDS.RecordCount < 1 then
-  begin
-    nHint := '倒料单[ %s ] 已无效!!';
-    nHint := Format(nHint, [nID]);
-    Exit;
-  end;
-
-  nStr := gPath + 'Report\DuanDao.fr3';
-  if not FDR.LoadReportFile(nStr) then
-  begin
-    nHint := '无法正确加载报表文件';
-    Exit;
-  end;
-
-  if nPrinter = '' then
-       FDR.Report1.PrintOptions.Printer := 'My_Default_Printer'
-  else FDR.Report1.PrintOptions.Printer := nPrinter;
-
-  FDR.Dataset1.DataSet := FDM.SQLQuery1;
-  FDR.PrintReport;
-  Result := FDR.PrintSuccess;
-end;
-
 //Desc: 获取nStock品种的报表文件
 function GetReportFileByStock(const nStock: string): string;
 begin
@@ -451,10 +413,17 @@ end;
 function PrintHeGeReport(const nBill: string; var nHint: string;
  const nPrinter: string = ''): Boolean;
 var nStr,nSR: string;
+    nField: TField;
 begin
   nHint := '';
   Result := False;
-  
+
+  {$IFDEF HeGeZhengSimpleData}
+  nSR := 'Select * from %s b ' +
+          ' Left Join %s sp On sp.P_Stock=b.L_StockName ' +
+          'Where b.L_ID=''%s''';
+  nStr := Format(nSR, [sTable_Bill, sTable_StockParam, nBill]);
+  {$ELSE}
   nSR := 'Select R_SerialNo,P_Stock,P_Name,P_QLevel From %s sr ' +
          ' Left Join %s sp on sp.P_ID=sr.R_PID';
   nSR := Format(nSR, [sTable_StockRecord, sTable_StockParam]);
@@ -468,12 +437,24 @@ begin
   nStr := MacroValue(nStr, [MI('$HY', sTable_StockHuaYan),
           MI('$Cus', sTable_Customer), MI('$SR', nSR), MI('$ID', nBill)]);
   //xxxxx
+  {$ENDIF}
 
   if FDM.SQLQuery(nStr, FDM.SqlTemp).RecordCount < 1 then
   begin
     nHint := '提货单[ %s ]没有对应的合格证';
     nHint := Format(nHint, [nBill]);
     Exit;
+  end;
+
+  with FDM.SqlTemp do
+  begin
+    nField := FindField('L_PrintHY');
+    if Assigned(nField) and (nField.AsString <> sFlag_Yes) then
+    begin
+      nHint := '交货单[ %s ]无需打印合格证.';
+      nHint := Format(nHint, [nBill]);
+      Exit;
+    end;
   end;
 
   nStr := gPath + 'Report\HeGeZheng.fr3';
@@ -573,26 +554,19 @@ begin
       begin
         PrintOrderReport(nBill, nHint, nPrinter);
         if nHint <> '' then WriteLog(nHint);
-      end
-      else
-      if nType = sFlag_DuanDao then
-      begin
-        PrintDDReport(nBill, nHint, nPrinter);
-        if nHint <> '' then WriteLog(nHint);
-      end
-      else
+      end else
       begin
         PrintBillReport(nBill, nHint, nPrinter, nMoney);
         if nHint <> '' then WriteLog(nHint);
 
-        {$IFDEF PrintHYEach}
-          {$IFNDEF HeGeZhengOnly}
-          PrintHuaYanReport(nBill, nHint, nHYPrinter);
-          if nHint <> '' then WriteLog(nHint);
-          {$ENDIF}
+        {$IFDEF PrintHuaYanDan}
+        PrintHuaYanReport(nBill, nHint, nHYPrinter);
+        if nHint <> '' then WriteLog(nHint);
+        {$ENDIF}
 
-          PrintHeGeReport(nBill, nHint, nHYPrinter);
-          if nHint <> '' then WriteLog(nHint);
+        {$IFDEF PrintHeGeZheng}
+        PrintHeGeReport(nBill, nHint, nHYPrinter);
+        if nHint <> '' then WriteLog(nHint);
         {$ENDIF}
       end;
     except

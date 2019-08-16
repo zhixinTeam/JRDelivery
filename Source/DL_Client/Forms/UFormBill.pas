@@ -12,7 +12,8 @@ uses
   UFormNormal, cxGraphics, cxControls, cxLookAndFeels,
   cxLookAndFeelPainters, cxContainer, cxEdit, ComCtrls, cxMaskEdit,
   cxDropDownEdit, cxListView, cxTextEdit, cxMCListBox, dxLayoutControl,
-  StdCtrls, cxButtonEdit, cxCheckBox, dxLayoutcxEditAdapters;
+  StdCtrls, cxButtonEdit, cxCheckBox, dxSkinsCore, dxSkinsDefaultPainters,
+  dxLayoutcxEditAdapters;
 
 type
   TfFormBill = class(TfFormNormal)
@@ -90,7 +91,7 @@ type
     FCard: string;
     FTruck: string;
     FPlan: PSalePlanItem;
-    FAreaCode: string;   //区域编号 2017-09-13
+    FAreaCode: string;   
   end;
 
   TStockItem = record
@@ -293,14 +294,15 @@ begin
     
     SetCtrlData(EditLading, nDB.FieldByName('Z_Lading').AsString);
     FMoney := GetZhikaValidMoney(gInfo.FZhiKa, gInfo.FOnlyMoney);
-    FAreaCode := nDB.FieldByName('Z_AreaCode').AsString;     //2017-09-13
+    FAreaCode := nDB.FieldByName('Z_AreaCode').AsString;
   end else
   begin
     ShowMsg(nStr, sHint); Exit;
   end;
 
-  BtnOK.Enabled := IsCustomerCreditValid(gInfo.FCusID);
-  if not BtnOK.Enabled then Exit;
+  //BtnOK.Enabled := IsCustomerCreditValid(gInfo.FCusID);
+  //if not BtnOK.Enabled then Exit;
+  BtnOK.Enabled := True;
   //to verify credit
 
   SetLength(gStockList, 0);
@@ -596,6 +598,17 @@ begin
   begin
     ShowMsg('请先办理提货单', sHint); Exit;
   end;
+  
+  {$IFDEF ForceEleCard}
+  {$IFDEF XXCJ}
+  if not IsEleCardVaidEx(EditTruck.Text) then
+  {$ELSE}
+  if not IsEleCardVaid(EditTruck.Text) then
+  {$ENDIF}
+  begin
+    ShowMsg('车辆未办理电子标签或电子标签未启用！请联系管理员', sHint); Exit;
+  end;
+  {$ENDIF}
 
   nStocks := TStringList.Create;
   nList := TStringList.Create;
@@ -666,9 +679,8 @@ begin
     end;
 
     BtnOK.Enabled := False;
-
     try
-      ShowWaitForm(Self, '正在保存订单', True);
+      ShowWaitForm(Self, '正在保存', True);
       gInfo.FIDList := SaveBill(PackerEncodeStr(nList.Text));
     finally
       BtnOK.Enabled := True;

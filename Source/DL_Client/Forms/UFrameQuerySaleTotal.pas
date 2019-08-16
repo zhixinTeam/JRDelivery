@@ -4,6 +4,7 @@
 *******************************************************************************}
 unit UFrameQuerySaleTotal;
 
+{$I Link.inc}
 interface
 
 uses
@@ -14,7 +15,8 @@ uses
   StdCtrls, cxRadioGroup, cxMaskEdit, cxButtonEdit, cxTextEdit, ADODB,
   cxLabel, UBitmapPanel, cxSplitter, cxGridLevel, cxClasses,
   cxGridCustomView, cxGridCustomTableView, cxGridTableView,
-  cxGridDBTableView, cxGrid, ComCtrls, ToolWin, dxLayoutcxEditAdapters;
+  cxGridDBTableView, cxGrid, ComCtrls, ToolWin, dxSkinsCore,
+  dxSkinsDefaultPainters, dxSkinscxPCPainter, dxLayoutcxEditAdapters;
 
 type
   TfFrameSaleDetailTotal = class(TfFrameNormal)
@@ -118,43 +120,60 @@ begin
   FEnableBackDB := True;
   EditDate.Text := Format('%s жа %s', [Date2Str(FStart), Date2Str(FEnd)]);
 
+  {$IFDEF CastMoney}
   if Radio1.Checked then
   begin
     Result := 'select L_SaleID,L_SaleMan,L_CusID,L_CusName,L_CusPY,' +
-              'Sum(L_Value) as L_Value,Sum(L_Value * L_Price) as L_Money ' +
+              'CAST(Sum(L_Value) as decimal(38, 2)) as L_Value,' +
+              'CAST(Sum(L_Value * L_Price) as decimal(38, 2)) as L_Money ' +
               'From $Bill ';
     //xxxxx
   end else
   begin
     Result := 'select L_SaleID,L_SaleMan,L_CusID,L_CusName,L_CusPY,L_Type,' +
-              'L_StockNo,L_StockName,Sum(L_Value) as L_Value,' +
-              'Sum(L_Value * L_Price) as L_Money From $Bill ';
+              'L_StockNo,L_StockName,CAST(Sum(L_Value) as decimal(38, 2)) as L_Value,' +
+              'CAST(Sum(L_Value * L_Price) as decimal(38, 2)) as L_Money From $Bill ';
     //xxxxx
   end;
+  {$ELSE}
+  if Radio1.Checked then
+  begin
+    Result := 'select L_SaleID,L_SaleMan,L_CusID,L_CusName,L_CusPY,' +
+              'c.C_NCid,c.C_NCName,c.C_JxsId,c.C_JxsName,Sum(L_Value) as L_Value,Sum(L_Value * L_Price) as L_Money ' +
+              'From $Bill b,$Cus c where L_CusID=C_ID ';
+    //xxxxx
+  end else
+  begin
+    Result := 'select L_SaleID,L_SaleMan,L_CusID,L_CusName,L_CusPY,L_Type,' +
+              'L_StockNo,L_StockName,c.C_NCid,c.C_NCName,c.C_JxsId,c.C_JxsName,Sum(L_Value) as L_Value,' +
+              'Sum(L_Value * L_Price) as L_Money From $Bill b,$Cus c where L_CusID=C_ID ';
+    //xxxxx
+  end;
+  {$ENDIF}
 
   if FJBWhere = '' then
   begin
-    Result := Result + 'Where (L_OutFact>=''$S'' and L_OutFact <''$End'')';
+    Result := Result + 'and (L_OutFact>=''$S'' and L_OutFact <''$End'')';
 
     if nWhere <> '' then
       Result := Result + ' And (' + nWhere + ')';
     //xxxxx
   end else
   begin
-    Result := Result + ' Where (' + FJBWhere + ')';
+    Result := Result + ' and (' + FJBWhere + ')';
   end;
 
   if Radio1.Checked then
   begin
-    Result := Result + ' Group By L_SaleID,L_SaleMan,L_CusID,L_CusName,L_CusPY';
+    Result := Result + ' Group By L_SaleID,L_SaleMan,L_CusID,L_CusName,L_CusPY,c.C_NCid,c.C_NCName,c.C_JxsId,c.C_JxsName';
   end else
   begin
     Result := Result + ' Group By L_SaleID,L_SaleMan,L_CusID,L_CusName,L_CusPY,' +
-              'L_Type,L_StockNo,L_StockName';
+              'L_Type,L_StockNo,L_StockName,c.C_NCid,c.C_NCName,c.C_JxsId,c.C_JxsName';
     //xxxxx
   end;
 
-  Result := MacroValue(Result, [MI('$Bill', sTable_Bill),
+  Result := MacroValue(Result, [MI('$Bill', sTable_Bill),MI('$Cus', sTable_Customer),
             MI('$S', Date2Str(FStart)), MI('$End', Date2Str(FEnd + 1))]);
   //xxxxx
 

@@ -24,7 +24,6 @@ type
     LabelTon: TcxLabel;
     LabelBill: TcxLabel;
     LabelOrder: TcxLabel;
-    labelCusName: TcxLabel;
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure ComPort1RxChar(Sender: TObject; Count: Integer);
@@ -199,7 +198,6 @@ begin
     LabelStock.Caption := '品种名称:';
     LabelNum.Caption := '开放道数:';
     LabelTon.Caption := '提货数量:';
-    labelCusName.Caption := '客户名称:';
     LabelHint.Caption := '请您刷卡';
   end else
   begin
@@ -295,7 +293,6 @@ begin
       LabelTruck.Caption := '车牌号码: ' + FieldByName('L_Truck').AsString;
       LabelStock.Caption := '品种名称: ' + FieldByName('L_StockName').AsString;
       LabelTon.Caption := '提货数量: ' + FieldByName('L_Value').AsString + '吨';
-      labelCusName.Caption := '客户名称: ' + FieldByName('L_CusName').AsString;
     end;
 
     //--------------------------------------------------------------------------

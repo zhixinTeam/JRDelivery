@@ -53,12 +53,18 @@ type
     class function FunctionName: string; override;
     function GetFixedServiceURL:string;override;
   end;
-  
+
   TClientBusinessHardware = class(TRemote2MITWorker)
   public
     function GetFlagStr(const nFlag: Integer): string; override;
     class function FunctionName: string; override;
-    function GetFixedServiceURL:string;override;
+  end;
+
+  TClientBusinessWechat = class(TRemote2MITWorker)
+  public
+    function GetFlagStr(const nFlag: Integer): string; override;
+    class function FunctionName: string; override;
+    function GetFixedServiceURL: string; override;
   end;
 
 function CallRemoteWorker(const nCLIWorkerName: string; const nData,nExt: string;
@@ -339,6 +345,7 @@ begin
     end;
   end;
 end;
+
 //------------------------------------------------------------------------------
 class function TClientBusinessHardware.FunctionName: string;
 begin
@@ -355,13 +362,29 @@ begin
   end;
 end;
 
-function TClientBusinessHardware.GetFixedServiceURL:string;
+//------------------------------------------------------------------------------
+class function TClientBusinessWechat.FunctionName: string;
+begin
+  Result := sCLI_BusinessWebchat;
+end;
+
+function TClientBusinessWechat.GetFlagStr(const nFlag: Integer): string;
+begin
+  Result := inherited GetFlagStr(nFlag);
+
+  case nFlag of
+   cWorker_GetPackerName : Result := sBus_BusinessWebchat;
+   cWorker_GetMITName    : Result := sBus_BusinessWebchat;
+  end;
+end;
+
+function TClientBusinessWechat.GetFixedServiceURL: string;
 var
   nStr:string;
 begin
   Result := '';
   nStr := 'select d_value from %s where d_name=''%s''';
-  nStr := Format(nStr,[sTable_SysDict,sFlag_MITSrvURL]);
+  nStr := Format(nStr,[sTable_SysDict,sFlag_WXServiceMIT]);
   with FDM.QuerySQL(nStr) do
   begin
     if RecordCount>0 then
@@ -370,9 +393,11 @@ begin
     end;
   end;
 end;
+
 initialization
   gBusinessWorkerManager.RegisteWorker(TClientWorkerQueryField, sPlug_ModuleRemote);
   gBusinessWorkerManager.RegisteWorker(TClientBusinessCommand, sPlug_ModuleRemote);
   gBusinessWorkerManager.RegisteWorker(TClientBusinessSaleBill, sPlug_ModuleRemote);
   gBusinessWorkerManager.RegisteWorker(TClientBusinessHardware, sPlug_ModuleRemote);
+  gBusinessWorkerManager.RegisteWorker(TClientBusinessWechat, sPlug_ModuleRemote);
 end.

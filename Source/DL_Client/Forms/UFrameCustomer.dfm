@@ -35,6 +35,9 @@ inherited fFrameCustomer: TfFrameCustomer
           Kind = bkEllipsis
         end>
       Properties.OnButtonClick = EditIDPropertiesButtonClick
+      Style.BorderColor = clWindowFrame
+      Style.BorderStyle = ebsSingle
+      Style.ButtonStyle = btsHotFlat
       TabOrder = 0
       OnKeyPress = OnCtrlKeyPress
       Width = 105
@@ -49,6 +52,9 @@ inherited fFrameCustomer: TfFrameCustomer
           Kind = bkEllipsis
         end>
       Properties.OnButtonClick = EditIDPropertiesButtonClick
+      Style.BorderColor = clWindowFrame
+      Style.BorderStyle = ebsSingle
+      Style.ButtonStyle = btsHotFlat
       TabOrder = 1
       OnKeyPress = OnCtrlKeyPress
       Width = 150
@@ -58,6 +64,8 @@ inherited fFrameCustomer: TfFrameCustomer
       Top = 93
       Hint = 'T.C_ID'
       ParentFont = False
+      Style.BorderColor = clWindowFrame
+      Style.BorderStyle = ebsSingle
       TabOrder = 2
       Width = 105
     end
@@ -66,6 +74,8 @@ inherited fFrameCustomer: TfFrameCustomer
       Top = 93
       Hint = 'T.C_Name'
       ParentFont = False
+      Style.BorderColor = clWindowFrame
+      Style.BorderStyle = ebsSingle
       TabOrder = 3
       Width = 150
     end
@@ -74,6 +84,8 @@ inherited fFrameCustomer: TfFrameCustomer
       Top = 93
       Hint = 'T.C_LiXiRen'
       ParentFont = False
+      Style.BorderColor = clWindowFrame
+      Style.BorderStyle = ebsSingle
       TabOrder = 4
       Width = 135
     end
@@ -82,40 +94,42 @@ inherited fFrameCustomer: TfFrameCustomer
       Top = 93
       Hint = 'T.C_Phone'
       ParentFont = False
+      Style.BorderColor = clWindowFrame
+      Style.BorderStyle = ebsSingle
       TabOrder = 5
       Width = 135
     end
     inherited dxGroup1: TdxLayoutGroup
       inherited GroupSearch1: TdxLayoutGroup
         object dxLayout1Item1: TdxLayoutItem
-          Caption = #23458#25143#32534#21495':'
+          CaptionOptions.Text = #23458#25143#32534#21495':'
           Control = EditID
           ControlOptions.ShowBorder = False
         end
         object dxLayout1Item2: TdxLayoutItem
-          Caption = #23458#25143#21517#31216':'
+          CaptionOptions.Text = #23458#25143#21517#31216':'
           Control = EditName
           ControlOptions.ShowBorder = False
         end
       end
       inherited GroupDetail1: TdxLayoutGroup
         object dxLayout1Item3: TdxLayoutItem
-          Caption = #23458#25143#32534#21495':'
+          CaptionOptions.Text = #23458#25143#32534#21495':'
           Control = cxTextEdit1
           ControlOptions.ShowBorder = False
         end
         object dxLayout1Item4: TdxLayoutItem
-          Caption = #23458#25143#21517#31216':'
+          CaptionOptions.Text = #23458#25143#21517#31216':'
           Control = cxTextEdit2
           ControlOptions.ShowBorder = False
         end
         object dxLayout1Item5: TdxLayoutItem
-          Caption = #32852#31995#20154':'
+          CaptionOptions.Text = #32852#31995#20154':'
           Control = cxTextEdit3
           ControlOptions.ShowBorder = False
         end
         object dxLayout1Item6: TdxLayoutItem
-          Caption = #32852#31995#30005#35805':'
+          CaptionOptions.Text = #32852#31995#30005#35805':'
           Control = cxTextEdit4
           ControlOptions.ShowBorder = False
         end
@@ -169,13 +183,13 @@ inherited fFrameCustomer: TfFrameCustomer
     object N5: TMenuItem
       Caption = '-'
     end
-    object m_bindWechartAccount: TMenuItem
-      Caption = #20851#32852#24494#20449#21830#22478#36134#25143
-      OnClick = m_bindWechartAccountClick
-    end
     object N6: TMenuItem
-      Caption = #21462#28040#21830#22478#36134#21495#20851#32852
+      Caption = #20851#32852#21830#22478#36134#25143
       OnClick = N6Click
+    end
+    object N7: TMenuItem
+      Caption = #21462#28040#21830#22478#20851#32852
+      OnClick = N7Click
     end
   end
 end

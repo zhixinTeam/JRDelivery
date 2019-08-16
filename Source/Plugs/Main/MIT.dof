@@ -101,7 +101,7 @@ DebugSourceDirs=
 UsePackages=0
 [Parameters]
 RunParams=Bus_MIT_1
-HostApplication=E:\ZXSoft\ZXDelivery\trunk\Bin\Bus_MIT\MIT.exe
+HostApplication=
 Launcher=
 UseLauncher=0
 DebugCWD=
