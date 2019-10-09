@@ -234,6 +234,7 @@ const
   sFlag_NetPlayVoice  = 'NetPlayVoice';              //使用网络语音播发
   sFlag_BatchAuto     = 'BatchAuto';                 //使用自动批次号
   sFlag_FobiddenInMul = 'FobiddenInMul';             //禁止多次进厂
+  sFlag_WashCarStock  = 'WashCarStock';              //需要洗车品种
 
   sFlag_BusGroup      = 'BusFunction';               //业务编码组
   sFlag_BillNo        = 'Bus_Bill';                  //交货单号

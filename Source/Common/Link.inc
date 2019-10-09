@@ -93,4 +93,6 @@
   //调价不再提示
   {$DEFINE FixLoad}
   //定制放灰
+  {$DEFINE AutoPoundInManual}
+  //袋装手动干预误差
 {$ENDIF}

@@ -58,12 +58,14 @@ type
     TimerDelay: TTimer;
     MemoLog: TZnTransMemo;
     Timer_SaveFail: TTimer;
+    Button1: TButton;
     procedure Timer1Timer(Sender: TObject);
     procedure Timer2Timer(Sender: TObject);
     procedure Timer_ReadCardTimer(Sender: TObject);
     procedure TimerDelayTimer(Sender: TObject);
     procedure Timer_SaveFailTimer(Sender: TObject);
     procedure EditBillKeyPress(Sender: TObject; var Key: Char);
+    procedure Button1Click(Sender: TObject);
   private
     { Private declarations }
     FCardUsed: string;
@@ -91,6 +93,8 @@ type
     //是否采用道闸
     FSaveResult: Boolean;
     //保存结果
+    FCarWashTunl:string;
+    //洗车通道
     FEmptyPoundInit, FDoneEmptyPoundInit: Int64;
     //空磅计时,过磅保存后空磅
     FEmptyPoundIdleLong, FEmptyPoundIdleShort: Int64;
@@ -265,6 +269,7 @@ begin
     FBarrierGate := Values['BarrierGate'] = sFlag_Yes;
     FEmptyPoundIdleLong := StrToInt64Def(Values['EmptyIdleLong'], 60);
     FEmptyPoundIdleShort:= StrToInt64Def(Values['EmptyIdleShort'], 5);
+    FCarWashTunl := Values['CarWashTunl'];
   end;
 end;
 
@@ -1029,6 +1034,16 @@ begin
        nRet := SavePoundSale
   else nRet := SavePoundData;
 
+  //发送洗车信号
+  if nRet and (FCarWashTunl<>'') then
+  begin
+    nStr := 'select * from %s where D_Name=''%s'' and D_Value=''%s''';
+    nStr := Format(nStr,[sTable_SysDict,sFlag_WashCarStock,FBillItems[0].FStockNo]);
+    with FDM.QueryTemp(nStr) do
+      if recordcount > 0 then
+        TunnelOC(FCarWashTunl,True);
+  end;
+
   if nRet then
   begin
     if (FCardUsed = sFlag_Sale) and (FBillItems[0].FType = sFlag_Dai)
@@ -1038,6 +1053,7 @@ begin
     else
       nStr := GetTruckNO(FUIData.FTruck) + '重量:' + GetValue(nValue);
     LEDDisplay(nStr);
+    WriteSysLog(nStr);
 
     {$IFDEF ProberShow}
       {$IFDEF MITTruckProber}
@@ -1218,6 +1234,11 @@ begin
     gDisplayManager.Display(FPoundTunnel.FID, nContent);
   end;
   {$ENDIF}
+end;
+
+procedure TfFrameAutoPoundItem.Button1Click(Sender: TObject);
+begin
+  TunnelOC(FCarWashTunl,True);
 end;
 
 end.

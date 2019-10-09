@@ -594,6 +594,15 @@ inherited fFrameAutoPoundItem: TfFrameAutoPoundItem
     ScrollBars = ssVertical
     TabOrder = 24
   end
+  object Button1: TButton
+    Left = 184
+    Top = 16
+    Width = 75
+    Height = 25
+    Caption = #27979#35797#27927#36710
+    TabOrder = 25
+    OnClick = Button1Click
+  end
   object Timer1: TTimer
     OnTimer = Timer1Timer
     Left = 420
