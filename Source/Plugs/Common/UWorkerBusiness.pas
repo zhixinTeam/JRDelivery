@@ -1482,7 +1482,7 @@ begin
                     SF('L_LineName',        FieldByName('L_LineName').AsString),
                     SF('L_DaiTotal',        FieldByName('L_DaiTotal').AsFloat),
                     SF('L_DaiNormal',       FieldByName('L_DaiNormal').AsFloat),
-                    SF('L_OutFact',         sField_SQLServer_Now, sfVal),
+                    SF('L_OutFact',         FIn.FExtParam),  //FieldByName('L_OutFact').AsDateTime
                     SF('L_OutMan',          FieldByName('L_OutMan').AsString),
                     SF('L_PrintGLF',        FieldByName('L_PrintGLF').AsString),
                     SF('L_Lading',          FieldByName('L_Lading').AsString),
@@ -1902,9 +1902,10 @@ var
   nSQL, nAPIUrl, nStr, nNo, nBillDate:string;
   nNCOut: TStringStream;
   nJo : ISuperObject;
+  nInit: Int64;
 begin
   Result := False;
-
+  nInit := GetTickCount;
   nNo := AdjustListStrFormat(FIn.FData , '''' , True , ',' , True);
 
   nAPIUrl := 'createDispatch?externalCode=%s&voucherDate=%s&partner=%s'+
@@ -1923,10 +1924,12 @@ begin
       WriteLog('同步出错,'+nData);
       Exit;
     end;
-    if FieldByName('L_outFact').AsString ='' then
-      nBillDate := Date2Str(Now, True)
-    else
-      nBillDate := Date2Str(FieldByName('L_outFact').AsDateTime, True);
+//    if FieldByName('L_outFact').AsString ='' then
+//      nBillDate := Date2Str(Now, True)
+//    else
+//      nBillDate := Date2Str(FieldByName('L_outFact').AsDateTime, True);
+
+    nBillDate := Date2Str(StrToDateTime(FIn.FExtParam),True) ;
 
     nAPIUrl := Format(nAPIUrl,[FieldByName('L_Id').AsString,
                 nBillDate,
@@ -1956,6 +1959,9 @@ begin
       WriteLog(nData);
       Exit;
     end;
+
+    WriteLog('推送单据'+nNo+'至用友耗时: ' + IntToStr(GetTickCount - nInit) + 'ms');
+
     nStr := UTF8Decode(nNCOut.DataString);
     nJo := so(nStr);
     if nJo['status'].AsString <> 'success' then

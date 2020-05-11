@@ -6,7 +6,8 @@ uses
   UMITPacker,
   UDataModule in 'forms\UDataModule.pas' {FDM: TDataModule},
   UFormMain in 'forms\UFormMain.pas' {fFormMain},
-  uReadCardThread in 'uReadCardThread.pas';
+  uReadCardThread in 'uReadCardThread.pas',
+  UFromDlg in 'UFromDlg.pas' {formDLg};
 
 {$R *.res}
 

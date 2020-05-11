@@ -355,9 +355,9 @@ function InitCapture(const nTunnel: PPTTunnelItem; var nLogin: Integer): Boolean
 function FreeCapture(nLogin: Integer): Boolean;
 //释放抓拍
 
-function SyncBillToErp(const nBillID:string):Boolean;
+function SyncBillToErp(const nBillID, nOutTime:string):Boolean;
 //同步至用友
-function SyncBillToBakDB(const nBillID:string):Boolean;
+function SyncBillToBakDB(const nBillID, nOutTime:string):Boolean;
 //同步至备用库
 implementation
 
@@ -3567,19 +3567,19 @@ end;
 //Date: 2019-04-12
 //Parm: 单号
 //Desc: 同步单据到erp
-function SyncBillToErp(const nBillID:string):Boolean;
+function SyncBillToErp(const nBillID, nOutTime:string):Boolean;
 var nOut: TWorkerBusinessCommand;
 begin
-  result := CallBusinessCommand(cBC_SyncBillToNC, nBillID, '' , @nOut);
+  result := CallBusinessCommand(cBC_SyncBillToNC, nBillID, nOutTime , @nOut);
 end;
 
 //Date: 2019-04-12
 //Parm: 单号
 //Desc: 同步单据到备用库
-function SyncBillToBakDB(const nBillID:string):Boolean;
+function SyncBillToBakDB(const nBillID, nOutTime:string):Boolean;
 var nOut: TWorkerBusinessCommand;
 begin
-  result := CallBusinessCommand(cBC_SyncStockBill, nBillID, '' , @nOut);
+  result := CallBusinessCommand(cBC_SyncStockBill, nBillID, nOutTime , @nOut);
 end;
 
 end.

@@ -452,7 +452,6 @@ begin
     end;
 
     nStr := FieldByName('Z_TJStatus').AsString;
-
     {$IFNDEF NoShowPriceChange}
     if nStr  <> '' then
     begin
@@ -464,11 +463,9 @@ begin
       Exit;
     end;
     {$ELSE}
-    if nStr  <> '' then
+    if nStr  = sFlag_TJing then
     begin
-      if nStr = sFlag_TJing then
-        nData := '纸卡[ %s ]正在调价,请稍后.';
-
+      nData := '纸卡[ %s ]正在调价,请稍后.';
       nData := Format(nData, [Values['ZhiKa']]);
       Exit;
     end;
@@ -1909,7 +1906,7 @@ end;
 //Parm: 交货单[FIn.FData];岗位[FIn.FExtParam]
 //Desc: 保存指定岗位提交的交货单列表
 function TWorkerBusinessBills.SavePostBillItems(var nData: string): Boolean;
-var nStr,nSQL,nTmp,nFixMoney: string;
+var nStr,nSQL,nTmp,nFixMoney, nTimeTruckOut: string;
     f,m,nVal,nMVal: Double;
     i,nIdx,nInt: Integer;
     nBills: TLadingBillItems;
@@ -2408,6 +2405,7 @@ begin
   //----------------------------------------------------------------------------
   if FIn.FExtParam = sFlag_TruckOut then
   begin
+    nTimeTruckOut := FormatDateTime('yyyy-mm-dd HH:MM:SS',Now);
     FListB.Clear;
     for nIdx:=Low(nBills) to High(nBills) do
     with nBills[nIdx] do
@@ -2418,7 +2416,7 @@ begin
       nSQL := MakeSQLByStr([SF('L_Status', sFlag_TruckOut),
               SF('L_NextStatus', ''),
               SF('L_Card', ''),
-              SF('L_OutFact', sField_SQLServer_Now, sfVal),
+              SF('L_OutFact', nTimeTruckOut),
               SF('L_OutMan', FIn.FBase.FFrom.FUser)
               ], sTable_Bill, SF('L_ID', FID), False);
       FListA.Add(nSQL); //更新交货单
@@ -2463,7 +2461,7 @@ begin
     if GetBillType(nBills[0].FID) then
     begin
       nStr := CombinStr(FListB, ',', True);
-      if not TWorkerBusinessCommander.CallMe(cBC_SyncStockBill, nStr, '', @nOut) then
+      if not TWorkerBusinessCommander.CallMe(cBC_SyncStockBill, nStr, nTimeTruckOut, @nOut) then
       begin
         nData := nOut.FData;
         Exit;
@@ -2471,7 +2469,7 @@ begin
 
       for nIdx := 0 to 3 do
       begin
-        if TWorkerBusinessCommander.CallMe(cBC_SyncBillToNC, nStr, '', @nOut) then
+        if TWorkerBusinessCommander.CallMe(cBC_SyncBillToNC, nStr, nTimeTruckOut, @nOut) then
         begin
           nSQL := 'Update %s Set L_SyncStatus=''%s'' Where L_ID=''%s''';
           nSQL := Format(nSQL, [sTable_Bill, sFlag_Yes, nBills[0].FID]);

@@ -244,6 +244,19 @@ begin
     ShowMsg('请选择要删除的记录', sHint); Exit;
   end;
 
+  nStr := 'Select Count(*) From %s Where P_Bill=''%s''';
+  nStr := Format(nStr, [sTable_PoundLog, SQLQuery.FieldByName('L_ID').AsString]);
+
+  with FDM.QueryTemp(nStr) do
+  begin
+    if Fields[0].AsInteger > 0 then
+    begin
+      nStr := '提货单已使用，请先删除磅单后再删除本单.';
+      ShowMsg(nStr,sHint);
+      Exit;
+    end;
+  end;
+
   with nP do
   begin
     nStr := SQLQuery.FieldByName('L_ID').AsString;
@@ -555,7 +568,7 @@ begin
       Exit;
     end;
 
-    if not SyncBillToErp(nID) then
+    if not SyncBillToErp(nID, SQLQuery.FieldByName('l_outfact').AsString) then
     begin
       ShowMessage('同步单据失败.');
       exit;
@@ -587,7 +600,7 @@ begin
       Exit;
     end;
 
-    if not SyncBillToBakDB(nID) then
+    if not SyncBillToBakDB(nID, SQLQuery.FieldByName('l_outfact').AsString) then
     begin
       ShowMessage('同步单据失败,请重试.');
       exit;

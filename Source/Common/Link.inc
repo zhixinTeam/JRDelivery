@@ -95,4 +95,6 @@
   //定制放灰
   {$DEFINE AutoPoundInManual}
   //袋装手动干预误差
+  {$DEFINE CapturePictureEx}
+  //启用抓拍登录
 {$ENDIF}

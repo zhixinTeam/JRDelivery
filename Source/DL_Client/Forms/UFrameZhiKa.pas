@@ -100,6 +100,8 @@ end;
 //Desc: 数据查询SQL
 function TfFrameZhiKa.InitFormDataSQL(const nWhere: string): string;
 begin
+  FEnableBackDB := True;
+  
   EditDate.Text := Format('%s 至 %s', [Date2Str(FStart), Date2Str(FEnd)]);
   
   Result := 'Select zk.*,sm.S_Name,sm.S_PY,cus.C_Name,cus.C_PY From $ZK zk ' +

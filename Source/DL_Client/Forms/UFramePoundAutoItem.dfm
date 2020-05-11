@@ -601,6 +601,7 @@ inherited fFrameAutoPoundItem: TfFrameAutoPoundItem
     Height = 25
     Caption = #27979#35797#27927#36710
     TabOrder = 25
+    Visible = False
     OnClick = Button1Click
   end
   object Timer1: TTimer

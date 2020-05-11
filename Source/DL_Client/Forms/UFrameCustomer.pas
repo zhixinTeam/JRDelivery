@@ -93,6 +93,8 @@ end;
 //Desc: Êý¾Ý²éÑ¯SQL
 function TfFrameCustomer.InitFormDataSQL(const nWhere: string): string;
 begin
+  FEnableBackDB := True;
+  
   Result := 'Select cus.*,S_Name From $Cus cus' +
             ' Left Join $Sale On S_ID=cus.C_SaleMan';
   //xxxxx

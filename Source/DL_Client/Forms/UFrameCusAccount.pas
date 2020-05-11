@@ -67,6 +67,8 @@ end;
 
 function TfFrameCusAccount.InitFormDataSQL(const nWhere: string): string;
 begin
+  FEnableBackDB := True;
+  
   Result := 'Select ca.*,cus.*,S_Name as C_SaleName,' +
             '(A_InitMoney + A_InMoney-A_OutMoney-A_Compensation-A_FreezeMoney) As A_YuE ' +
             'From $CA ca ' +

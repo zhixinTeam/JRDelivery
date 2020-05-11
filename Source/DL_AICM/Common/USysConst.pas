@@ -307,6 +307,7 @@ var
   gSysParam:TSysParam;                               //程序环境参数
   gStatusBar: TStatusBar;                            //全局使用状态栏
   gMenuModule: TList = nil;                          //菜单模块映射表
+  gCanMakeCard :Boolean;
 
 //------------------------------------------------------------------------------
 ResourceString

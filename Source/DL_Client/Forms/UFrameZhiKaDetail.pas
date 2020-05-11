@@ -119,7 +119,9 @@ begin
 end;
 
 function TfFrameZhiKaDetail.InitFormDataSQL(const nWhere: string): string;
-begin  
+begin
+  FEnableBackDB := True;
+  
   EditDate.Text := Format('%s жа %s', [Date2Str(FStart), Date2Str(FEnd)]);
 
   Result := 'Select sm.*,zk.*,zd.*,ht.*,zd.R_ID as D_RID,' +

@@ -37,6 +37,8 @@ inherited fFrameZhiKaDetail: TfFrameZhiKaDetail
       Top = 93
       Hint = 'T.Z_ID'
       ParentFont = False
+      Style.BorderColor = clWindowFrame
+      Style.BorderStyle = ebsSingle
       TabOrder = 3
       Width = 112
     end
@@ -50,6 +52,9 @@ inherited fFrameZhiKaDetail: TfFrameZhiKaDetail
           Kind = bkEllipsis
         end>
       Properties.OnButtonClick = EditZKPropertiesButtonClick
+      Style.BorderColor = clWindowFrame
+      Style.BorderStyle = ebsSingle
+      Style.ButtonStyle = btsHotFlat
       TabOrder = 1
       OnKeyPress = OnCtrlKeyPress
       Width = 135
@@ -64,6 +69,9 @@ inherited fFrameZhiKaDetail: TfFrameZhiKaDetail
           Kind = bkEllipsis
         end>
       Properties.OnButtonClick = EditZKPropertiesButtonClick
+      Style.BorderColor = clWindowFrame
+      Style.BorderStyle = ebsSingle
+      Style.ButtonStyle = btsHotFlat
       TabOrder = 0
       OnKeyPress = OnCtrlKeyPress
       Width = 112
@@ -79,6 +87,9 @@ inherited fFrameZhiKaDetail: TfFrameZhiKaDetail
         end>
       Properties.ReadOnly = True
       Properties.OnButtonClick = EditDatePropertiesButtonClick
+      Style.BorderColor = clWindowFrame
+      Style.BorderStyle = ebsSingle
+      Style.ButtonStyle = btsHotFlat
       TabOrder = 2
       Width = 185
     end
@@ -87,6 +98,8 @@ inherited fFrameZhiKaDetail: TfFrameZhiKaDetail
       Top = 93
       Hint = 'T.D_StockName'
       ParentFont = False
+      Style.BorderColor = clWindowFrame
+      Style.BorderStyle = ebsSingle
       TabOrder = 4
       Width = 135
     end
@@ -95,6 +108,8 @@ inherited fFrameZhiKaDetail: TfFrameZhiKaDetail
       Top = 93
       Hint = 'T.C_Name'
       ParentFont = False
+      Style.BorderColor = clWindowFrame
+      Style.BorderStyle = ebsSingle
       TabOrder = 6
       Width = 121
     end
@@ -103,47 +118,48 @@ inherited fFrameZhiKaDetail: TfFrameZhiKaDetail
       Top = 93
       Hint = 'T.D_Value'
       ParentFont = False
+      Style.BorderColor = clWindowFrame
+      Style.BorderStyle = ebsSingle
       TabOrder = 5
       Width = 100
     end
     inherited dxGroup1: TdxLayoutGroup
       inherited GroupSearch1: TdxLayoutGroup
         object dxLayout1Item3: TdxLayoutItem
-          Caption = #32440#21345#32534#21495':'
+          CaptionOptions.Text = #32440#21345#32534#21495':'
           Control = EditZK
           ControlOptions.ShowBorder = False
         end
         object dxLayout1Item2: TdxLayoutItem
-          Caption = #23458#25143#21517#31216':'
+          CaptionOptions.Text = #23458#25143#21517#31216':'
           Control = EditCus
           ControlOptions.ShowBorder = False
         end
         object dxLayout1Item6: TdxLayoutItem
-          Caption = #26085#26399#31579#36873':'
+          CaptionOptions.Text = #26085#26399#31579#36873':'
           Control = EditDate
           ControlOptions.ShowBorder = False
         end
       end
       inherited GroupDetail1: TdxLayoutGroup
         object dxLayout1Item1: TdxLayoutItem
-          Caption = #32440#21345#32534#21495':'
+          CaptionOptions.Text = #32440#21345#32534#21495':'
           Control = cxTextEdit1
           ControlOptions.ShowBorder = False
         end
         object dxLayout1Item7: TdxLayoutItem
-          Caption = #27700#27877#21697#31181':'
+          CaptionOptions.Text = #27700#27877#21697#31181':'
           Control = cxTextEdit4
           ControlOptions.ShowBorder = False
         end
         object dxLayout1Item5: TdxLayoutItem
-          Caption = #21150#29702#21544#25968':'
+          CaptionOptions.Text = #21150#29702#21544#25968':'
           Control = cxTextEdit3
           ControlOptions.ShowBorder = False
         end
         object dxLayout1Item4: TdxLayoutItem
-          AutoAligns = [aaVertical]
           AlignHorz = ahClient
-          Caption = #23458#25143#21517#31216':'
+          CaptionOptions.Text = #23458#25143#21517#31216':'
           Control = cxTextEdit2
           ControlOptions.ShowBorder = False
         end

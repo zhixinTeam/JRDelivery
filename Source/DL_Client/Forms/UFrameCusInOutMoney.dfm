@@ -25,9 +25,11 @@ inherited fFrameCusInOutMoney: TfFrameCusInOutMoney
     Height = 135
     object cxTextEdit3: TcxTextEdit [0]
       Left = 81
-      Top = 96
+      Top = 93
       Hint = 'T.M_CusID'
       ParentFont = False
+      Style.BorderColor = clWindowFrame
+      Style.BorderStyle = ebsSingle
       TabOrder = 2
       Width = 120
     end
@@ -42,14 +44,19 @@ inherited fFrameCusInOutMoney: TfFrameCusInOutMoney
         end>
       Properties.ReadOnly = True
       Properties.OnButtonClick = EditDatePropertiesButtonClick
+      Style.BorderColor = clWindowFrame
+      Style.BorderStyle = ebsSingle
+      Style.ButtonStyle = btsHotFlat
       TabOrder = 1
       Width = 185
     end
     object cxTextEdit4: TcxTextEdit [2]
       Left = 264
-      Top = 96
+      Top = 93
       Hint = 'T.M_CusName'
       ParentFont = False
+      Style.BorderColor = clWindowFrame
+      Style.BorderStyle = ebsSingle
       TabOrder = 3
       Width = 185
     end
@@ -63,46 +70,50 @@ inherited fFrameCusInOutMoney: TfFrameCusInOutMoney
           Kind = bkEllipsis
         end>
       Properties.OnButtonClick = EditTruckPropertiesButtonClick
+      Style.BorderColor = clWindowFrame
+      Style.BorderStyle = ebsSingle
+      Style.ButtonStyle = btsHotFlat
       TabOrder = 0
       OnKeyPress = OnCtrlKeyPress
       Width = 120
     end
     object cxTextEdit5: TcxTextEdit [4]
       Left = 512
-      Top = 96
+      Top = 93
       Hint = 'T.M_Memo'
       ParentFont = False
+      Style.BorderColor = clWindowFrame
+      Style.BorderStyle = ebsSingle
       TabOrder = 4
       Width = 100
     end
     inherited dxGroup1: TdxLayoutGroup
       inherited GroupSearch1: TdxLayoutGroup
         object dxLayout1Item8: TdxLayoutItem
-          Caption = #23458#25143#21517#31216':'
+          CaptionOptions.Text = #23458#25143#21517#31216':'
           Control = EditCustomer
           ControlOptions.ShowBorder = False
         end
         object dxLayout1Item6: TdxLayoutItem
-          Caption = #26085#26399#31579#36873':'
+          CaptionOptions.Text = #26085#26399#31579#36873':'
           Control = EditDate
           ControlOptions.ShowBorder = False
         end
       end
       inherited GroupDetail1: TdxLayoutGroup
         object dxLayout1Item5: TdxLayoutItem
-          Caption = #23458#25143#32534#21495':'
+          CaptionOptions.Text = #23458#25143#32534#21495':'
           Control = cxTextEdit3
           ControlOptions.ShowBorder = False
         end
         object dxLayout1Item7: TdxLayoutItem
-          Caption = #23458#25143#21517#31216':'
+          CaptionOptions.Text = #23458#25143#21517#31216':'
           Control = cxTextEdit4
           ControlOptions.ShowBorder = False
         end
         object dxLayout1Item10: TdxLayoutItem
-          AutoAligns = [aaVertical]
           AlignHorz = ahClient
-          Caption = #25551#36848#20449#24687':'
+          CaptionOptions.Text = #25551#36848#20449#24687':'
           Control = cxTextEdit5
           ControlOptions.ShowBorder = False
         end

@@ -77,6 +77,8 @@ end;
 
 function TfFrameCusInOutMoney.InitFormDataSQL(const nWhere: string): string;
 begin
+  FEnableBackDB := True;
+  
   EditDate.Text := Format('%s жа %s', [Date2Str(FStart), Date2Str(FEnd)]);
 
   Result := 'Select iom.*,S_Name From $IOM iom ' +

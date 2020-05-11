@@ -90,6 +90,8 @@ end;
 
 function TfFrameQueryDispatch.InitFormDataSQL(const nWhere: string): string;
 begin
+  FEnableBackDB := True;
+  
   Result := ' Select zt.*,Z_Name,L_CusID,L_CusName,L_Status,L_Value,L_LadeTime ' +
             'From $ZT zt ' +
             ' Left Join $ZL zl On zl.Z_ID=zt.T_Line ' +

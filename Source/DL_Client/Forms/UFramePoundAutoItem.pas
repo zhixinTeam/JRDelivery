@@ -649,6 +649,7 @@ begin
     if FUIData.FPData.FValue <= 0 then
     begin
       WriteLog('请先称量皮重');
+      PlayVoice('请先称量皮重');
       Exit;
     end;
 
@@ -698,6 +699,7 @@ begin
     if FUIData.FMData.FValue <= 0 then
     begin
       WriteLog('请先称量毛重');
+      PlayVoice('请先称量毛重');
       Exit;
     end;
   end;
@@ -709,6 +711,7 @@ begin
       if FUIData.FPData.FValue > FUIData.FMData.FValue then
       begin
         WriteLog('皮重应小于毛重');
+        PlayVoice('皮重应小于毛重');
         Exit;
       end;
 

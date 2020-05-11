@@ -35,6 +35,7 @@ type
     imgCard: TImage;
     ImageSep: TImage;
     imgPurchaseCard: TImage;
+    LabelCus: TcxLabel;
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure ComPort1RxChar(Sender: TObject; Count: Integer);
@@ -82,7 +83,7 @@ uses
   IniFiles, ULibFun, CPortTypes, USysLoger, USysDB, USmallFunc, UDataModule,
   UFormConn, uZXNewCard,USysConst,UClientWorker,UMITPacker,USysModule,USysBusiness,
   UDataReport,UFormInputbox,UFormBarcodePrint,uZXNewPurchaseCard,
-  UFormBase,DateUtils;
+  UFormBase,DateUtils, UFromDlg;
 
 type
   TReaderType = (ptT800, pt8142);
@@ -380,6 +381,7 @@ begin
       LabelTruck.Caption := '车牌号码: ' + FieldByName('L_Truck').AsString;
       LabelStock.Caption := '品种名称: ' + FieldByName('L_StockName').AsString;
       LabelTon.Caption := '提货数量: ' + FieldByName('L_Value').AsString + '吨';
+      LabelCus.Caption := '客户名称:' + FieldByName('L_CusName').AsString;
     end;
     WriteLog('TfFormMain.QueryCard(nCard='''+nCard+''')查询提货单[nStr]-耗时：'+InttoStr(MilliSecondsBetween(Now, nBeginTotal))+'ms');
     //--------------------------------------------------------------------------
@@ -560,6 +562,14 @@ end;
 
 procedure TfFormMain.imgCardClick(Sender: TObject);
 begin
+  if not Assigned(formDLg) then
+  begin
+    formDLg := tformDLg.create(nil);
+    formDLg.ShowModal;
+  end;
+
+  if gCanMakeCard = False then Exit;
+
   if Sender=imgCard then
   begin
     if not Assigned(fFormNewCard) then
@@ -608,7 +618,7 @@ begin
     nTop := nIni.ReadInteger('screen','top',0);
     nWidth := nIni.ReadInteger('screen','width',1024);
     nHeight := nIni.ReadInteger('screen','height',768);
-    nItemHeigth := nHeight div 8;
+    nItemHeigth := nHeight div 9;
 
     LabelTruck.Height := nItemHeigth;
     LabelDec.Height := nItemHeigth;
@@ -647,13 +657,12 @@ begin
     Exit;
   end;
 
-  {try
+  try
     FTimeCounter := 10;
     TimerReadCard.Enabled := True;
 
     nStr := 'select * from %s where o_card=''%s''';
     nStr := Format(nStr, [sTable_Order, nCard]);
-    FBegin := Now;
     with FDM.QuerySQL(nStr) do
     begin
       if RecordCount < 1 then
@@ -666,9 +675,10 @@ begin
       LabelOrder.Caption := '采购订单: ' + FieldByName('o_bid').AsString;
       LabelTruck.Caption := '车牌号码: ' + FieldByName('o_Truck').AsString;
       LabelStock.Caption := '品种名称: ' + FieldByName('o_StockName').AsString;
+      LabelCus.Caption := '客户名称: ' + FieldByName('o_ProName').AsString;
       LabelTon.Caption := '提货数量: ';
     end;
-    WriteLog('TfFormMain.QueryPorderinfo(nCard='''+nCard+''')查询采购单['+nStr+']-耗时：'+InttoStr(MilliSecondsBetween(Now, FBegin))+'ms');
+    WriteLog('TfFormMain.QueryPorderinfo(nCard='''+nCard+''')查询采购单['+nStr+'].');
     FLastQuery := GetTickCount;
     FLastCard := nCard;
   except
@@ -677,7 +687,7 @@ begin
       ShowMsg('查询失败', sHint);
       WriteLog(E.Message);
     end;
-  end;}
+  end;
 end;
 
 end.

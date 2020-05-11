@@ -134,6 +134,8 @@ OriginalFilename=
 ProductName=
 ProductVersion=1.0.0.0
 Comments=
+[Excluded Packages]
+D:\Program Files (x86)\RemObjects Software\Data Abstract for Delphi\Dcu\D7\DataAbstract_Scripting_D7.bpl=RemObjects Data Abstract - Scripting Integration Library
 [HistoryLists\hlUnitAliases]
 Count=1
 Item0=WinTypes=Windows;WinProcs=Windows;DbiTypes=BDE;DbiProcs=BDE;DbiErrs=BDE;

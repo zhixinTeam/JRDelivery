@@ -83,6 +83,8 @@ end;
 //------------------------------------------------------------------------------
 function TfFrameTruckQuery.InitFormDataSQL(const nWhere: string): string;
 begin
+  FEnableBackDB := True;
+  
   EditDate.Text := Format('%s жа %s', [Date2Str(FStart), Date2Str(FEnd)]);
   //xxxxx
   Result := 'Select * from $Bill b ';
