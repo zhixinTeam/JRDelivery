@@ -13,7 +13,7 @@ uses
   Windows, Forms, Classes, SysUtils, ULibFun, UBusinessWorker, UBusinessPacker,
   UTaskMonitor, UBaseObject, USysShareMem, USysLoger, UMITConst, UMITPacker,
   {$IFDEF HardMon}UEventHardware, UWorkerHardware,{$ENDIF}
-  UWorkerBusiness, UWorkerBusinessBill, UWorkerBusinessOrder,
+  UWorkerBusiness, UWorkerBusinessBill, UWorkerBusinessOrder,USysDB,
   {$IFDEF MicroMsg}UMgrRemoteWXMsg,{$ENDIF} UMemDataPool,
   UMgrDBConn, UMgrParam, UMgrPlug, UMgrChannel, UChannelChooser,
   USAPConnection, UWorkerBusinessDuanDao;
@@ -64,6 +64,60 @@ begin
 }
 end;
 
+//Desc: 读取数据库参数
+procedure LoadDBConfig;
+var nStr: string;
+    nWorker: PDBWorker;
+begin
+  nWorker := nil;
+  try
+    nStr := ' Select D_Value, D_Memo From Sys_Dict Where D_Name = ''%s'' ';
+    nStr := Format(nStr, ['SysParam']);
+
+    with gDBConnManager.SQLQuery(nStr, nWorker) do
+    if RecordCount > 0 then
+    begin
+      First;
+
+      while not Eof do
+      begin
+        nStr := Fields[1].AsString;
+        if nStr = sFlag_WXErpUrl then
+          gSysParam.FWXERPUrl := Fields[0].AsString;
+         //鉴权服务地址
+
+        if nStr = sFlag_WXErpZhangHu then
+          gSysParam.FWXZhangHu := Fields[0].AsString;
+         //鉴权账户
+
+        if nStr = sFlag_WXErpMima then
+          gSysParam.FWXMiMa := Fields[0].AsString;
+         //鉴权密码
+
+        if nStr = 'Authorization' then
+          gSysParam.FAuthorization := Fields[0].AsString;
+
+        if nStr = 'TenantId' then
+          gSysParam.FTenantId := Fields[0].AsString;
+
+        if nStr = 'DeptId' then
+          gSysParam.FDeptId    := Fields[0].AsString;
+
+        if nStr = 'CarrierId' then
+          gSysParam.FCarrierId := Fields[0].AsString;
+
+        if nStr = sFlag_WXToken then
+          gSysParam.FWXToken := Fields[0].AsString;
+        //鉴权固定Token
+        
+        Next;
+      end;
+    end;
+  finally
+    gDBConnManager.ReleaseConnection(nWorker); 
+  end;
+end;
+
 procedure TMainEventWorker.BeforeStartServer;
 begin
   {$IFDEF DBPool}
@@ -97,6 +151,7 @@ begin
 
   gTaskMonitor.StartMon;
   //mon task start
+  LoadDBConfig;
 end;
 
 procedure TMainEventWorker.AfterStopServer;

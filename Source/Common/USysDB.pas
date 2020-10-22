@@ -264,6 +264,11 @@ const
   sFlag_LSStock       = 'ls-sn-00';                  //零售水泥编号(预开)
   sFlag_LSCustomer    = 'ls-kh-00';                  //零售客户编号(预开)
 
+  sFlag_WXErpUrl      = 'WXErpUrl';                  //流向管控服务地址
+  sFlag_WXErpZhangHu  = 'WXErpZhangHu';              //流向管控账户
+  sFlag_WXErpMima     = 'WXErpMima';                 //流向管控密码
+  sFlag_WXToken       = 'WXToken';                   //流向管控Token
+
   sFlag_WxItem        = 'WxItem';                    //微信相关
   sFlag_InOutBegin    = 'BeginTime';                 //进出厂查询起始时间
   sFlag_InOutEnd      = 'EndTime';                   //进出厂查询结束时间

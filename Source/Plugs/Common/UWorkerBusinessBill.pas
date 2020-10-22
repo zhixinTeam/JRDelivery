@@ -11,7 +11,8 @@ uses
   Windows, Classes, Controls, DB, SysUtils, UBusinessWorker, UBusinessPacker,
   {$IFDEF MicroMsg}UMgrRemoteWXMsg,{$ENDIF}
   UWorkerBusiness, UBusinessConst, UMgrDBConn, ULibFun, UFormCtrl, UBase64,
-  USysLoger, USysDB, UMITConst;
+  USysLoger, USysDB, UMITConst, UObjectList, IdHTTP, uSuperObject,
+  MsMultiPartFormData, HTTPApp;
 
 type
   TStockMatchItem = record
@@ -37,6 +38,10 @@ type
     //list
     FIn: TWorkerBusinessCommand;
     FOut: TWorkerBusinessCommand;
+    
+    FChannel: TIdHTTP;
+    Faccess_token : string;
+    Ftoken_type   : string;
     //io
     FSanMultiBill: Boolean;
     //散装多单
@@ -57,6 +62,7 @@ type
     function GetBillType(const nBillID: string): Boolean;
     //读取客户分类
     function AllowedSanMultiBill: Boolean;
+    function GetTruckNoCheck(var nData: string): Boolean;
     function VerifyBeforSave(var nData: string): Boolean;
     function SaveBills(var nData: string): Boolean;
     //保存交货单
@@ -165,34 +171,79 @@ begin
   end;
 end;
 
+//Date: 2017-09-24
+//Desc: 创建对象
+function NewHttp(const nClass: TClass): TObject;
+begin
+  Result := TIdHTTP.Create(nil);
+end;
+
+//Date: 2017-09-24
+//Desc: 释放对象
+procedure FreeHttp(const nObject: TObject);
+begin
+  TIdHTTP(nObject).Free;
+end;
+
 //Date: 2014-09-15
 //Parm: 输入数据
 //Desc: 执行nData业务指令
 function TWorkerBusinessBills.DoDBWork(var nData: string): Boolean;
+var
+  nInt: Integer;
+  nItem: PObjectPoolItem;
 begin
-  with FOut.FBase do
-  begin
-    FResult := True;
-    FErrCode := 'S.00';
-    FErrDesc := '业务执行成功.';
+  nInt := InterlockedExchange(gSapURLInited, 10);
+  try
+    if nInt < 1 then
+    begin
+      if not Assigned(gObjectPoolManager) then
+        gObjectPoolManager := TObjectPoolManager.Create;
+      gObjectPoolManager.RegClass(TIdHTTP, NewHttp, FreeHttp);
+    end;
+  except
+    InterlockedExchange(gSapURLInited, nInt);
   end;
 
-  case FIn.FCommand of
-   cBC_SaveBills           : Result := SaveBills(nData);
-   cBC_DeleteBill          : Result := DeleteBill(nData);
-   cBC_ModifyBillTruck     : Result := ChangeBillTruck(nData);
-   cBC_SaleAdjust          : Result := BillSaleAdjust(nData);
-   cBC_SaveBillCard        : Result := SaveBillCard(nData);
-   cBC_SaveBillLSCard      : Result := SaveBillLSCard(nData);
-   cBC_LogoffCard          : Result := LogoffCard(nData);
-   cBC_GetPostBills        : Result := GetPostBillItems(nData);
-   cBC_SavePostBills       : Result := SavePostBillItems(nData);
-   cBC_MakeSanPreHK        : Result := MakeSanPreHK(nData);
-   else
+  nItem := nil;
+  try
+    Result := False;
+    nItem := gObjectPoolManager.LockObject(TIdHTTP);
+
+    if not Assigned(nItem) then
     begin
-      Result := False;
-      nData := '无效的业务代码(Invalid Command).';
+      nData := '连接Sap失败(IdHTTP Is Null).';
+      Exit;
     end;
+
+    FChannel := nItem.FObject as TIdHTTP;
+
+    with FOut.FBase do
+    begin
+      FResult := True;
+      FErrCode := 'S.00';
+      FErrDesc := '业务执行成功.';
+    end;
+
+    case FIn.FCommand of
+     cBC_SaveBills           : Result := SaveBills(nData);
+     cBC_DeleteBill          : Result := DeleteBill(nData);
+     cBC_ModifyBillTruck     : Result := ChangeBillTruck(nData);
+     cBC_SaleAdjust          : Result := BillSaleAdjust(nData);
+     cBC_SaveBillCard        : Result := SaveBillCard(nData);
+     cBC_SaveBillLSCard      : Result := SaveBillLSCard(nData);
+     cBC_LogoffCard          : Result := LogoffCard(nData);
+     cBC_GetPostBills        : Result := GetPostBillItems(nData);
+     cBC_SavePostBills       : Result := SavePostBillItems(nData);
+     cBC_MakeSanPreHK        : Result := MakeSanPreHK(nData);
+     else
+      begin
+        Result := False;
+        nData := '无效的业务代码(Invalid Command).';
+      end;
+    end;
+  finally
+    gObjectPoolManager.ReleaseObject(nItem);
   end;
 end;
 
@@ -520,6 +571,10 @@ begin
 
   FListB.Text := PackerDecodeStr(FListA.Values['Bills']);
   //unpack bill list
+
+  FListC.Text := PackerDecodeStr(FListB[0]);
+  if not GetTruckNoCheck(nData) then Exit;
+
   nVal := 0;
 
   for nIdx:=0 to FListB.Count - 1 do
@@ -2662,6 +2717,171 @@ begin
   begin
     Result := FieldByName('L_CusFromNC').AsString = sFlag_Yes;
     exit;
+  end;
+end;
+
+function TWorkerBusinessBills.GetTruckNoCheck(var nData: string): Boolean;
+var
+  nStr, str, nTruck : string;
+  ReStream:TStringstream;
+  ReJo, OneJo, ParamJo : ISuperObject;
+  
+function GetLoginToken: Boolean;
+var
+  nStr, szUrl: string;
+  ReJo, OneJo : ISuperObject;
+  ArrsJa: TSuperArray;
+  wParam: TStrings;
+  ReStream:TStringstream;
+  nDataStream: TMsMultiPartFormDataStream;
+  nIdx: Integer;
+begin
+  Result      := False;
+ 
+  wParam      := TStringList.Create;
+  ReStream    := TStringstream.Create('');
+  nDataStream := TMsMultiPartFormDataStream.Create;
+
+  try
+    wParam.Clear;
+
+    nDataStream.AddFormField('username', gSysParam.FWXZhangHu);
+    nDataStream.AddFormField('password', gSysParam.FWXMiMa);
+    nDataStream.AddFormField('grant_type', 'password');
+    nDataStream.AddFormField('Scope', 'all'+ CRLF);
+    nDataStream.done;
+
+    szUrl := gSysParam.FWXERPUrl + '/api/shipper-auth/oauth/token';
+    FChannel.Request.Clear;
+    FChannel.HTTPOptions := FChannel.HTTPOptions+[hoKeepOrigProtocol];
+    FChannel.ProtocolVersion:= pv1_1;
+    FChannel.Request.CustomHeaders.Clear;
+    FChannel.Request.CustomHeaders.AddValue('Authorization',gSysParam.FAuthorization);
+    FChannel.Request.CustomHeaders.AddValue('Tenant-Id',    gSysParam.FTenantId);
+    FChannel.Request.ContentType := nDataStream.RequestContentType;
+    try
+      FChannel.Post(szUrl, nDataStream, ReStream);
+      nStr := ReStream.DataString;
+      nStr := UTF8Decode(ReStream.DataString);
+    except
+      on E:Exception do
+      begin
+        WriteLog('异常信息：'+E.Message);
+        Exit;
+      end;
+    end;
+    if nStr <> '' then
+    begin
+      ReJo    := SO(nStr);
+      Faccess_token   := ReJo.S['access_token'];
+      Ftoken_type     := ReJo.S['token_type'];
+
+      WriteLog('鉴权Token：' + Faccess_token);
+      WriteLog('鉴权Type：'  + Ftoken_type);
+      Result := True;
+      if  Trim(Faccess_token) = '' then
+      begin
+        Result     := False;
+      end;
+    end;
+  finally
+    FChannel.Disconnect;
+    nDataStream.Free;
+    ReStream.Free;
+    wParam.Free;
+  end;
+end;
+begin
+  Result :=  True;
+  
+  nStr := ' Select D_Value From %s  Where D_Name = ''%s'' and D_Memo = ''%s'' ';
+  nStr := Format(nStr, [sTable_SysDict, 'SysParam','TruckNoCheck']);
+  with gDBConnManager.WorkerQuery(FDBConn, nStr) do
+  begin
+    if RecordCount > 0 then
+      if FieldByName('D_Value').AsString = sFlag_No then
+      begin
+        Exit;
+      end;
+  end;
+
+  nStr := ' Select D_Index From %s  Where D_Name = ''%s'' and D_ParamB = ''%s'' ';
+  nStr := Format(nStr, [sTable_SysDict, 'StockItem',FListC.Values['StockNO']]); //666666 C_IsJG
+  with gDBConnManager.WorkerQuery(FDBConn, nStr) do
+  begin
+    if RecordCount > 0 then
+    begin
+      WriteLog('品种：'+FListC.Values['StockNO']+'D_Index:'+FieldByName('D_Index').AsString);
+      if FieldByName('D_Index').AsInteger <> 1 then
+      begin
+        Exit;
+      end;
+    end;
+  end;
+
+  nStr := ' Select isnull(C_IsJG,''N'') as C_IsJG From S_Customer  Where C_ID = ''%s'' ';
+  nStr := Format(nStr, [FListA.Values['CusID']]);  
+  with gDBConnManager.WorkerQuery(FDBConn, nStr) do
+  begin
+    WriteLog('客户编号：'+FListA.Values['CusID']+' C_IsJG:'+FieldByName('C_IsJG').AsString);
+    if RecordCount > 0 then
+      if FieldByName('C_IsJG').AsString <> 'Y' then
+      begin
+        Exit;
+      end;
+  end;
+
+  //if FListC.Values['Type'] = sFlag_Dai then Exit;
+
+  nTruck := FListA.Values['Truck'];
+  if GetLoginToken then
+  begin
+    ReStream := TStringstream.Create('');
+
+    FChannel.Request.CustomHeaders.Clear;
+    FChannel.Request.ContentType    := 'application/json';
+    FChannel.Request.Connection     := 'keep-alive';
+    FChannel.Request.CustomHeaders.Clear;
+    str:= Ftoken_type+' '+Faccess_token;
+    FChannel.Request.CustomHeaders.Text:='blade-auth:'+str;
+    nStr := gSysParam.FWXERPUrl + '/api/shippers-trucks/truckstate/info?'+'truckno='+HttpEncode(UTF8EnCode(nTruck));
+    try
+      try
+        FChannel.Get(nStr,ReStream);
+        nStr := ReStream.DataString;
+        nStr := UTF8Decode(ReStream.DataString);
+      except
+        on E:Exception do
+        begin
+          WriteLog('异常信息：'+E.Message);
+          Exit;
+        end;
+      end;
+      
+      if nStr <> '' then
+      begin
+        ReJo    := SO(nStr);
+        if  ReJo.S['code'] = '200' then
+        begin
+          if ReJo.S['data'] <> '2' then
+            Result        := True
+          else
+          begin
+            nData         := '车辆维修中';
+            Result        := False;
+            WriteLog('车辆维修中：' + nTruck);
+          end;
+        end
+        else
+        begin
+          nData         := ReJo.S['msg'];
+          Result        := False;
+        end;
+      end;
+    finally
+      FChannel.Disconnect;
+      ReStream.Free;
+    end;
   end;
 end;
 

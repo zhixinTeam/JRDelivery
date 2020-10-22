@@ -199,6 +199,9 @@ procedure AnalyseBillItems(const nData: string; var nItems: TLadingBillItems);
 function CombineBillItmes(const nItems: TLadingBillItems): string;
 //合并交货单数据为业务对象能处理的字符串
 
+var
+  gSapURLInited: Integer = 0;      //是否初始化
+  
 resourcestring
   {*PBWDataBase.FParam*}
   sParam_NoHintOnError        = 'NHE';                  //不提示错误

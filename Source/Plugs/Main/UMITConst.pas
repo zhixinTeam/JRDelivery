@@ -64,6 +64,14 @@ type
 
     FDisplayDPI : Integer;                           //屏幕分辨率
     FAutoMin    : Boolean;                           //自动最小化
+    FWXERPUrl   : string;                            //鉴权服务器地址
+    FWXZhangHu  : string;                            //鉴权账户
+    FWXMiMa     : string;                            //鉴权密码
+    FWXToken    : string;
+    FAuthorization : string;
+    FTenantId      : string;
+    FDeptId        : string;                         //所属组织机构
+    FCarrierId     : string;                         //承运方
   end;
   //系统参数
 
